@@ -5,7 +5,7 @@ Abstract base class defining the interface and lifecycle for all
 electrochemical experiments. Uses template method pattern.
 """
 
-from abc import ABC, abstractmethod
+from abc import ABCMeta, abstractmethod
 from typing import Dict, Any, Optional
 from PyQt5.QtCore import QObject, pyqtSignal
 from enum import Enum
@@ -22,7 +22,13 @@ class ExperimentState(Enum):
     ERROR = "error"
 
 
-class BaseExperiment(QObject, ABC):
+# Combined metaclass to resolve QObject and ABCMeta conflict
+class QABCMeta(type(QObject), ABCMeta):
+    """Metaclass combining QObject's metaclass with ABCMeta."""
+    pass
+
+
+class BaseExperiment(QObject, metaclass=QABCMeta):
     """
     Abstract base class for all electrochemical experiments.
 

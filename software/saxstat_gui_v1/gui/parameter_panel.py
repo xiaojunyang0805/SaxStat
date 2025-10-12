@@ -43,23 +43,24 @@ class ParameterPanel(QWidget):
     def _init_ui(self):
         """Initialize the UI layout."""
         layout = QVBoxLayout(self)
+        layout.setContentsMargins(0, 0, 0, 0)
 
         # Parameter group box
         self.param_group = QGroupBox("Experiment Parameters")
+        param_group_layout = QVBoxLayout()
+
+        # Form layout for parameters
         self.param_layout = QFormLayout()
-        self.param_group.setLayout(self.param_layout)
+        param_group_layout.addLayout(self.param_layout)
 
-        layout.addWidget(self.param_group)
-
-        # Configure button
-        button_layout = QHBoxLayout()
+        # Configure button inside the group box
         self.configure_btn = QPushButton("Configure Experiment")
         self.configure_btn.clicked.connect(self._on_configure_clicked)
         self.configure_btn.setEnabled(False)
-        button_layout.addStretch()
-        button_layout.addWidget(self.configure_btn)
+        param_group_layout.addWidget(self.configure_btn)
 
-        layout.addLayout(button_layout)
+        self.param_group.setLayout(param_group_layout)
+        layout.addWidget(self.param_group)
         layout.addStretch()
 
     def set_experiment(self, experiment: BaseExperiment):

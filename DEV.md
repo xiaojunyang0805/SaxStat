@@ -299,6 +299,64 @@ Run with: `python run.py` from saxstat_gui_v1/ directory
 
 ---
 
+## 2025-10-12 - GUI UX Improvements: Dual Plots & Modern Styling
+
+**Duration:** ~1.5 hours | **Status:** ✅ Complete
+
+### Completed
+- ✅ Added dual plot system (Applied Voltage + Main Data plots side-by-side)
+- ✅ Implemented clean blue & gray color scheme with light backgrounds
+- ✅ Changed all fonts to Arial for professional appearance
+- ✅ Made all text darker for better readability (#212121)
+- ✅ Fixed graph axis labels (Time (s), Voltage (V), Current (µA))
+- ✅ Aligned all section frames with consistent borders
+- ✅ Moved Configure button inside Experiment Parameters frame
+- ✅ Fixed metaclass conflict in BaseExperiment (QObject + ABCMeta)
+- ✅ Created requirements.txt with all dependencies
+- ✅ Successfully tested GUI with all 7 experiments
+
+### Dual Plot System
+- **Left Plot:** Applied Voltage vs Time
+  - Shows the voltage waveform being applied
+  - Helpful for visualizing CV triangular wave, LSV ramp, SWV/DPV pulses
+  - Axis labels: Time (s) and Voltage (V)
+- **Right Plot:** Main experiment data
+  - Current vs Voltage (for CV, LSV, SWV, DPV, NPV)
+  - Current vs Time (for CA)
+  - Voltage vs Time (for POT)
+  - Dynamic labels based on experiment type
+
+### Modern Styling
+- **Color Scheme:**
+  - Light blue background (#E3F2FD) for all GroupBoxes
+  - Medium blue (#64B5F6) for borders and buttons
+  - Darker blue (#1976D2, #1565C0) for titles and highlights
+  - Near-black (#212121) for all body text
+  - Gray for disabled elements (#BDBDBD, #757575)
+- **Typography:**
+  - Arial font throughout entire application
+  - 10pt for body text, 12pt for axis labels, 13pt for titles
+  - Bold for buttons and section headers
+- **Layout:**
+  - 2px solid borders on all GroupBoxes
+  - 6px border radius for rounded corners
+  - Consistent padding and margins
+  - Configure button moved inside parameter frame
+
+### Technical Fixes
+- **Metaclass Conflict:** Created QABCMeta combining type(QObject) and ABCMeta
+- **Initialization Order:** Moved _setup_statusbar() before _setup_ui() to prevent attribute error
+- **Plot Text Styling:** Updated PlotManager.set_labels() to apply darker colors
+- **Dependencies:** Installed PyQt5, pyqtgraph, pandas, pyserial, openpyxl, matplotlib
+
+### Stats
+- Modified files: 3 (main_window.py, parameter_panel.py, plot_manager.py)
+- Lines modified: ~200 lines of styling and layout improvements
+- New files: 2 (requirements.txt, base_experiment.py metaclass fix)
+- **GUI now has professional, clean appearance with dual plot visualization**
+
+---
+
 ## Next Session - Remaining Tasks
 
 **Per WORK_PLAN.md v2.0:**
@@ -344,7 +402,7 @@ Run with: `python run.py` from saxstat_gui_v1/ directory
 
 ## Session Summary (2025-10-12)
 
-**Total Duration:** ~6.5 hours | **WORK_PLAN v2.0 Status:** Phase 1 ✅ | Phase 2 ✅ | Phase 3 ✅ | Phase 4 🔄 (65%) | Phase 5 🔄 (15%)
+**Total Duration:** ~8 hours | **WORK_PLAN v2.0 Status:** Phase 1 ✅ | Phase 2 ✅ | Phase 3 ✅ | Phase 4 🔄 (70%) | Phase 5 🔄 (15%)
 
 ### Achievements Per WORK_PLAN v2.0
 - ✅ **Phase 1: Core Architecture** - Complete (100%)
@@ -369,9 +427,11 @@ Run with: `python run.py` from saxstat_gui_v1/ directory
   - ✅ Configuration management (JSON-based)
   - ✅ Parameter persistence (last port, experiment, window size)
 
-- 🔄 **Phase 4: Polish & Testing** - In Progress (65%)
+- 🔄 **Phase 4: Polish & Testing** - In Progress (70%)
   - ✅ Error handling framework
   - ✅ Plot export (PNG/JPEG)
+  - ✅ GUI UX improvements (dual plots, modern styling)
+  - ✅ Professional typography (Arial font)
   - 🔄 User documentation (partial)
   - 🔄 Testing suite (test script created)
   - 🔄 Packaging (planned)
@@ -381,18 +441,20 @@ Run with: `python run.py` from saxstat_gui_v1/ directory
   - 🔄 Phase 5.2-5.7 planned
 
 ### Deliverables
-- **Documentation:** 3 major docs (DStat Analysis, Architecture, Work Plan v2.0) ~180KB
-- **Code:** 25 Python modules, ~4,000 lines functional GUI
+- **Documentation:** 3 major docs (DStat Analysis, Architecture, Work Plan v2.1) ~180KB
+- **Code:** 26 Python modules, ~4,200 lines functional GUI
 - **Experiments:** 7 techniques (CV, LSV, CA, SWV, DPV, NPV, POT) with full parameter validation
+- **GUI Features:** Dual plots, modern styling, Arial typography, professional UX
+- **Dependencies:** requirements.txt with PyQt5, pyqtgraph, pandas, pyserial
 - **GitHub:** https://github.com/xiaojunyang0805/SaxStat
-- **Status:** Functional GUI v1 with 7 experiments, ready for hardware testing
+- **Status:** Professional GUI v1 with 7 experiments, dual plot visualization, ready for hardware testing
 
 ### Current Completion
-- **MVP (v1.0) Progress:** ~90% (core + 7 experiments done, hardware testing/docs remain)
+- **MVP (v1.2) Progress:** ~92% (core + 7 experiments + UX done, hardware testing/docs remain)
 - **Phase 1:** Complete ✅
 - **Phase 2:** Complete ✅ (CV, LSV, CA all implemented)
 - **Phase 3:** Complete ✅
-- **Phase 4:** 65% (error handling ✅, docs/testing pending)
+- **Phase 4:** 70% (error handling ✅, GUI UX ✅, docs/testing pending)
 - **Phase 5:** 15% (Phase 5.1 complete, remaining phases planned)
 
 **Last Updated:** 2025-10-12

@@ -1,0 +1,19 @@
+# SaxStat GUI v1 Requirements
+
+# GUI Framework
+PyQt5>=5.15.0
+
+# Real-time plotting
+pyqtgraph>=0.13.0
+
+# Data management
+pandas>=1.5.0
+
+# Serial communication
+pyserial>=3.5
+
+# Optional: Excel export support
+openpyxl>=3.0.0
+
+# Optional: Additional plotting capabilities
+matplotlib>=3.5.0

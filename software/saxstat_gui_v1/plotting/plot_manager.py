@@ -55,17 +55,23 @@ class PlotManager:
 
     def set_labels(self, x_label: str, y_label: str, title: str = ''):
         """
-        Set plot labels.
+        Set plot labels with darker text.
 
         Args:
             x_label: X-axis label with unit (e.g., 'Time (s)')
             y_label: Y-axis label with unit (e.g., 'Current (µA)')
             title: Plot title
         """
-        self.plot_item.setLabel('bottom', x_label)
-        self.plot_item.setLabel('left', y_label)
+        self.plot_item.setLabel('bottom', x_label, color='#212121', size='12pt')
+        self.plot_item.setLabel('left', y_label, color='#212121', size='12pt')
         if title:
-            self.plot_item.setTitle(title)
+            self.plot_item.setTitle(title, color='#212121', size='13pt')
+
+        # Update axis text colors
+        self.widget.getAxis('left').setTextPen('#212121')
+        self.widget.getAxis('bottom').setTextPen('#212121')
+        self.widget.getAxis('left').setPen('#424242')
+        self.widget.getAxis('bottom').setPen('#424242')
 
     def set_axis_ranges(self, x_range: Tuple[float, float],
                        y_range: Tuple[float, float]):

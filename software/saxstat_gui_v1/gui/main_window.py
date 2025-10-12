@@ -37,7 +37,7 @@ class MainWindow(QMainWindow):
 
     def __init__(self):
         super().__init__()
-        self.setWindowTitle("SaxStat v1.0")
+        self.setWindowTitle("SaxStat v1.0 - Portable Potentiostat")
         self.setGeometry(100, 100, 1400, 900)
 
         # Core components
@@ -48,13 +48,119 @@ class MainWindow(QMainWindow):
         self.current_experiment: BaseExperiment = None
         self.experiment_registry = get_registry()
 
+        # Apply modern styling
+        self._apply_stylesheet()
+
+        # Setup statusbar first (before UI initialization)
+        self._setup_statusbar()
         self._setup_ui()
         self._setup_menu()
-        self._setup_statusbar()
         self._connect_signals()
 
         # Load initial configuration
         self._load_config()
+
+    def _apply_stylesheet(self):
+        """Apply clean blue and gray stylesheet with Arial font."""
+        stylesheet = """
+            * {
+                font-family: Arial, sans-serif;
+            }
+            QMainWindow {
+                background-color: #f5f5f5;
+            }
+            QGroupBox {
+                font-weight: bold;
+                border: 2px solid #64B5F6;
+                border-radius: 6px;
+                margin-top: 12px;
+                padding-top: 10px;
+                background-color: #E3F2FD;
+            }
+            QGroupBox::title {
+                subcontrol-origin: margin;
+                left: 10px;
+                padding: 0 5px;
+                color: #1976D2;
+                font-family: Arial, sans-serif;
+            }
+            QPushButton {
+                background-color: #64B5F6;
+                color: white;
+                border: none;
+                padding: 8px 16px;
+                border-radius: 4px;
+                font-weight: bold;
+                font-family: Arial, sans-serif;
+                min-height: 24px;
+            }
+            QPushButton:hover {
+                background-color: #42A5F5;
+            }
+            QPushButton:pressed {
+                background-color: #1976D2;
+            }
+            QPushButton:disabled {
+                background-color: #BDBDBD;
+                color: #757575;
+            }
+            QComboBox {
+                border: 1px solid #90CAF9;
+                border-radius: 4px;
+                padding: 4px 8px;
+                background-color: white;
+                color: #212121;
+                font-family: Arial, sans-serif;
+                min-height: 24px;
+            }
+            QComboBox:focus {
+                border: 2px solid #64B5F6;
+            }
+            QComboBox::drop-down {
+                border: none;
+                width: 20px;
+            }
+            QLabel {
+                color: #212121;
+                font-size: 10pt;
+                font-family: Arial, sans-serif;
+            }
+            QStatusBar {
+                background-color: #E3F2FD;
+                color: #1565C0;
+                border-top: 2px solid #64B5F6;
+                font-weight: bold;
+                font-family: Arial, sans-serif;
+                padding: 4px;
+            }
+            QMenuBar {
+                background-color: #ffffff;
+                border-bottom: 2px solid #E0E0E0;
+                font-family: Arial, sans-serif;
+            }
+            QMenuBar::item {
+                padding: 4px 12px;
+                background-color: transparent;
+                color: #212121;
+            }
+            QMenuBar::item:selected {
+                background-color: #E3F2FD;
+                color: #1565C0;
+            }
+            QDoubleSpinBox, QSpinBox {
+                border: 1px solid #90CAF9;
+                border-radius: 4px;
+                padding: 4px;
+                background-color: white;
+                color: #212121;
+                font-family: Arial, sans-serif;
+                min-height: 20px;
+            }
+            QDoubleSpinBox:focus, QSpinBox:focus {
+                border: 2px solid #64B5F6;
+            }
+        """
+        self.setStyleSheet(stylesheet)
 
     def _setup_ui(self):
         """Initialize the main user interface layout."""
@@ -126,17 +232,38 @@ class MainWindow(QMainWindow):
 
         left_layout.addStretch()
 
-        # Right panel - Plot
+        # Right panel - Dual plots (Applied Voltage + Main Data)
         right_panel = QWidget()
-        right_layout = QVBoxLayout(right_panel)
+        right_layout = QHBoxLayout(right_panel)
 
+        # Applied voltage vs time plot (left)
+        self.voltage_time_widget = pg.PlotWidget()
+        self.voltage_time_widget.setBackground('w')
+        self.voltage_time_widget.showGrid(x=True, y=True)
+        self.voltage_time_widget.setLabel('left', 'Voltage (V)', color='#212121', size='12pt')
+        self.voltage_time_widget.setLabel('bottom', 'Time (s)', color='#212121', size='12pt')
+        self.voltage_time_widget.setTitle("Applied Voltage vs Time", color='#212121', size='13pt')
+        # Make axis text darker
+        self.voltage_time_widget.getAxis('left').setTextPen('#212121')
+        self.voltage_time_widget.getAxis('bottom').setTextPen('#212121')
+        self.voltage_time_widget.getAxis('left').setPen('#424242')
+        self.voltage_time_widget.getAxis('bottom').setPen('#424242')
+        right_layout.addWidget(self.voltage_time_widget)
+
+        # Main data plot (right - current vs voltage or time)
         self.plot_widget = pg.PlotWidget()
         self.plot_widget.setBackground('w')
         self.plot_widget.showGrid(x=True, y=True)
+        # Make axis text darker
+        self.plot_widget.getAxis('left').setTextPen('#212121')
+        self.plot_widget.getAxis('bottom').setTextPen('#212121')
+        self.plot_widget.getAxis('left').setPen('#424242')
+        self.plot_widget.getAxis('bottom').setPen('#424242')
         right_layout.addWidget(self.plot_widget)
 
-        # Create plot manager
+        # Create plot managers
         self.plot_manager = PlotManager(self.plot_widget)
+        self.voltage_plot_manager = PlotManager(self.voltage_time_widget)
 
         # Add panels to main layout
         splitter = QSplitter(Qt.Horizontal)
@@ -339,6 +466,7 @@ class MainWindow(QMainWindow):
             # Clear previous data
             self.data_manager.clear()
             self.plot_manager.clear()
+            self.voltage_plot_manager.clear()
 
             # Start experiment
             command = self.current_experiment.start()
@@ -394,7 +522,11 @@ class MainWindow(QMainWindow):
         # Add to data manager
         self.data_manager.add_data_point(data_point)
 
-        # Update plot
+        # Update applied voltage plot (always time vs voltage)
+        if 'time' in data_point and 'voltage' in data_point:
+            self.voltage_plot_manager.add_point(data_point['time'], data_point['voltage'])
+
+        # Update main plot
         plot_config = self.current_experiment.get_plot_config()
         x_key = plot_config.get('x_data', 'time')
         y_key = plot_config.get('y_data', 'current')
