@@ -1,0 +1,3 @@
+Note fore SaxStat_V03_GUI_Test_02.ino
+This firmware enable current mode for TIA resistor toggling between 10 kΩ and 1 MΩ.
+0 for ±500 µA (10 kΩ), 1 for ±100 nA (1 MΩ)

@@ -1,0 +1,217 @@
+# SaxStat .gitignore
+# Generated: 2025-10-12
+
+# ============================================================================
+# PRIVATE CONTENT - Excluded from public repository
+# ============================================================================
+
+# Private documentation and business files
+SaxStat_private docs/
+*_private*/
+*private*/
+
+# Private hardware manufacturing files (Gerbers, Pick & Place)
+hardware/gerbers_private/
+
+# Reference materials (will be cited in README instead)
+Reference/
+reference/
+
+# ============================================================================
+# PYTHON
+# ============================================================================
+
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# Distribution / packaging
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+pip-wheel-metadata/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# PyInstaller
+*.manifest
+*.spec
+
+# Unit test / coverage reports
+htmlcov/
+.tox/
+.nox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+*.py,cover
+.hypothesis/
+.pytest_cache/
+
+# Virtual environments
+venv/
+env/
+ENV/
+env.bak/
+venv.bak/
+.venv/
+.env/
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# pyenv
+.python-version
+
+# ============================================================================
+# IDE / EDITOR
+# ============================================================================
+
+# PyCharm
+.idea/
+*.iml
+*.iws
+.idea_modules/
+
+# VS Code
+.vscode/
+*.code-workspace
+
+# Sublime Text
+*.sublime-project
+*.sublime-workspace
+
+# Vim
+*.swp
+*.swo
+*~
+.*.sw[a-z]
+
+# Emacs
+*~
+\#*\#
+.\#*
+
+# ============================================================================
+# OS GENERATED
+# ============================================================================
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+*.lnk
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+
+# Linux
+*~
+.directory
+.Trash-*
+
+# ============================================================================
+# TEMPORARY FILES
+# ============================================================================
+
+*.tmp
+*.temp
+*.bak
+*.backup
+*.old
+*.orig
+~$*
+.~lock.*
+
+# ============================================================================
+# PROJECT SPECIFIC
+# ============================================================================
+
+# Test data that may contain sensitive information
+# (Public example data in examples/ will be included)
+# Uncomment if needed:
+# test_results/
+# measurements/
+
+# Compiled GUI executables (if using PyInstaller)
+*.exe
+*.app
+*.dmg
+
+# Log files
+*.log
+
+# Data files (uncomment if you want to exclude user-generated data)
+# *.csv
+# *.xlsx
+# *.json
+
+# Calibration files with device-specific data
+# calibration_data/
+
+# ============================================================================
+# DOCUMENTATION BUILD
+# ============================================================================
+
+# Sphinx documentation
+docs/_build/
+docs/_static/
+docs/_templates/
+
+# MkDocs
+site/
+
+# ============================================================================
+# VERSION CONTROL
+# ============================================================================
+
+# Git
+*.orig
+*.rej
+
+# ============================================================================
+# OTHER
+# ============================================================================
+
+# Archives
+*.zip
+*.tar.gz
+*.rar
+*.7z
+
+# Certificates and keys
+*.pem
+*.key
+*.crt
+*.p12
+*.pfx
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+
+# Node modules (if any JavaScript tools are used)
+node_modules/
