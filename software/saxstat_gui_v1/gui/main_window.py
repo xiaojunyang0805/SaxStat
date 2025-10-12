@@ -39,7 +39,7 @@ class MainWindow(QMainWindow):
 
     def __init__(self):
         super().__init__()
-        self.setWindowTitle("SaxStat v1.0 - Portable Potentiostat")
+        self.setWindowTitle("SaxStat v1.1 - Portable Potentiostat")
         self.setGeometry(100, 100, 1400, 900)
 
         # Core components
@@ -837,11 +837,13 @@ class MainWindow(QMainWindow):
     def _on_about_clicked(self):
         """Handle about menu action."""
         about_text = """
-        <h2>SaxStat v1.0</h2>
+        <h2>SaxStat v1.1</h2>
         <p>Portable potentiostat for electrochemical testing</p>
         <p><b>Hardware:</b> ESP32-based with AD5761 DAC and ADS1115 ADC</p>
         <p><b>Voltage Range:</b> -1.5V to +1.5V</p>
-        <p><b>Experiments:</b> CV, LSV, CA, SWV, DPV (more coming)</p>
+        <p><b>Experiments:</b> CV, LSV, CA, SWV, DPV, NPV, POT (7 total)</p>
+        <p><b>Analysis:</b> Peak detection, baseline correction, integration, smoothing</p>
+        <p><b>Features:</b> Autosave, parameter presets, plot overlays, calibration</p>
         <br>
         <p>For more information, visit the project repository.</p>
         """

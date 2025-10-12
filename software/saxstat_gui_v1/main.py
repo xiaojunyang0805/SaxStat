@@ -13,7 +13,7 @@ def main():
     """Launch the SaxStat GUI application."""
     app = QApplication(sys.argv)
     app.setApplicationName("SaxStat")
-    app.setApplicationVersion("1.0.0-dev")
+    app.setApplicationVersion("1.1.0")
     app.setOrganizationName("SaxStat")
 
     window = MainWindow()

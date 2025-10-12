@@ -200,7 +200,7 @@ This project was inspired by and references the following open-source potentiost
 
 For questions, issues, or collaboration inquiries:
 - **GitHub Issues:** [Create an issue](https://github.com/yourusername/SaxStat/issues)
-- **Email:** [Your email]
+- **Email:** xiaojunyang0805@gmail.com
 
 ## Citation
 
