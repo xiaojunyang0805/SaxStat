@@ -9,5 +9,6 @@ from .main_window import MainWindow
 from .parameter_panel import ParameterPanel
 from .preferences_dialog import PreferencesDialog
 from .overlay_dialog import OverlayDialog
+from .calibration_dialog import CalibrationDialog
 
-__all__ = ['MainWindow', 'ParameterPanel', 'PreferencesDialog', 'OverlayDialog']
+__all__ = ['MainWindow', 'ParameterPanel', 'PreferencesDialog', 'OverlayDialog', 'CalibrationDialog']

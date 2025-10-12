@@ -823,8 +823,11 @@ class MainWindow(QMainWindow):
 
     def _on_calibration_clicked(self):
         """Handle calibration menu action."""
-        # TODO: Implement calibration dialog
-        QMessageBox.information(self, "Calibration", "Calibration feature coming soon")
+        from .calibration_dialog import CalibrationDialog
+
+        dialog = CalibrationDialog(self.config, self)
+        if dialog.exec_() == QDialog.Accepted:
+            self.statusbar.showMessage("Calibration saved successfully")
 
     def _on_about_clicked(self):
         """Handle about menu action."""
