@@ -38,6 +38,11 @@ class PlotManager:
 
         # Plot curves
         self.curve: Optional[pg.PlotDataItem] = None
+        self.overlay_curves: List[pg.PlotDataItem] = []  # Overlay curves for comparison
+
+        # Overlay colors (cycle through for multiple overlays)
+        self.overlay_colors = ['#FF6B6B', '#4ECDC4', '#45B7D1', '#FFA07A', '#98D8C8', '#F7DC6F', '#BB8FCE']
+        self.overlay_color_index = 0
 
         # Configure default appearance
         self._setup_plot()
@@ -124,13 +129,16 @@ class PlotManager:
     # Data management
 
     def clear(self):
-        """Clear all plot data."""
+        """Clear all plot data and overlays."""
         self.x_data.clear()
         self.y_data.clear()
 
         if self.curve is not None:
             self.plot_item.removeItem(self.curve)
             self.curve = None
+
+        # Clear overlay curves
+        self.clear_overlays()
 
     def add_point(self, x: float, y: float):
         """
@@ -223,3 +231,85 @@ class PlotManager:
             self.x_data = self.x_data[::step]
             self.y_data = self.y_data[::step]
             self.update()
+
+    # Overlay management
+
+    def add_overlay(self, x_data: List[float], y_data: List[float],
+                    label: str = '', color: str = None, width: int = 2,
+                    style: str = 'solid') -> pg.PlotDataItem:
+        """
+        Add an overlay curve for comparison.
+
+        Args:
+            x_data: X data for overlay
+            y_data: Y data for overlay
+            label: Label for the overlay (for legend)
+            color: Line color (auto-assigned if None)
+            width: Line width
+            style: Line style ('solid', 'dash', 'dot')
+
+        Returns:
+            PlotDataItem: The created overlay curve
+        """
+        # Auto-assign color if not provided
+        if color is None:
+            color = self.overlay_colors[self.overlay_color_index % len(self.overlay_colors)]
+            self.overlay_color_index += 1
+
+        # Create pen with style
+        pen_style = {
+            'solid': pg.QtCore.Qt.SolidLine,
+            'dash': pg.QtCore.Qt.DashLine,
+            'dot': pg.QtCore.Qt.DotLine
+        }.get(style, pg.QtCore.Qt.SolidLine)
+
+        pen = pg.mkPen(color=color, width=width, style=pen_style)
+
+        # Create overlay curve
+        overlay_curve = self.plot_item.plot(
+            x_data,
+            y_data,
+            pen=pen,
+            name=label  # For legend support
+        )
+
+        self.overlay_curves.append(overlay_curve)
+        return overlay_curve
+
+    def clear_overlays(self):
+        """Remove all overlay curves."""
+        for curve in self.overlay_curves:
+            self.plot_item.removeItem(curve)
+        self.overlay_curves.clear()
+        self.overlay_color_index = 0
+
+    def remove_overlay(self, index: int):
+        """
+        Remove a specific overlay by index.
+
+        Args:
+            index: Index of overlay to remove
+        """
+        if 0 <= index < len(self.overlay_curves):
+            self.plot_item.removeItem(self.overlay_curves[index])
+            del self.overlay_curves[index]
+
+    def get_overlay_count(self) -> int:
+        """Get number of active overlays."""
+        return len(self.overlay_curves)
+
+    def show_legend(self, show: bool = True):
+        """
+        Show or hide plot legend.
+
+        Args:
+            show: True to show legend
+        """
+        if show and self.overlay_curves:
+            self.plot_item.addLegend()
+        else:
+            # Remove legend if it exists
+            legend = self.plot_item.legend
+            if legend is not None:
+                self.plot_item.legend = None
+                legend.scene().removeItem(legend)

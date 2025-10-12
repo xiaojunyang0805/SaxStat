@@ -8,5 +8,6 @@ parameter panels, plot displays, and status indicators.
 from .main_window import MainWindow
 from .parameter_panel import ParameterPanel
 from .preferences_dialog import PreferencesDialog
+from .overlay_dialog import OverlayDialog
 
-__all__ = ['MainWindow', 'ParameterPanel', 'PreferencesDialog']
+__all__ = ['MainWindow', 'ParameterPanel', 'PreferencesDialog', 'OverlayDialog']

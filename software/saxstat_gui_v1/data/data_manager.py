@@ -25,6 +25,7 @@ class DataManager:
     def __init__(self):
         self.data: Optional[pd.DataFrame] = None
         self.metadata: Dict[str, Any] = {}
+        self.history: List[Dict[str, Any]] = []  # Store past experiments
         self._reset()
 
     def _reset(self):
@@ -75,8 +76,20 @@ class DataManager:
         self.data = pd.concat([self.data, new_data], ignore_index=True)
 
     def complete_collection(self):
-        """Mark data collection as complete."""
+        """Mark data collection as complete and save to history."""
         self.metadata['end_time'] = datetime.now()
+
+        # Save current experiment to history (max 50 entries)
+        if not self.data.empty:
+            history_entry = {
+                'data': self.data.copy(),
+                'metadata': self.metadata.copy()
+            }
+            self.history.append(history_entry)
+
+            # Keep only last 50 experiments
+            if len(self.history) > 50:
+                self.history = self.history[-50:]
 
     # Data access
 
@@ -249,3 +262,39 @@ class DataManager:
                 'count': int(self.data[col].count())
             }
         return stats
+
+    # History management
+
+    def get_history(self) -> List[Dict[str, Any]]:
+        """
+        Get experiment history.
+
+        Returns:
+            list: List of history entries with 'data' and 'metadata'
+        """
+        return self.history
+
+    def get_history_summary(self) -> List[Dict[str, Any]]:
+        """
+        Get summary of experiment history for display.
+
+        Returns:
+            list: List of summary dicts with experiment info
+        """
+        summaries = []
+        for idx, entry in enumerate(self.history):
+            metadata = entry['metadata']
+            summary = {
+                'index': idx,
+                'experiment_name': metadata.get('experiment_name', 'Unknown'),
+                'start_time': metadata.get('start_time'),
+                'end_time': metadata.get('end_time'),
+                'parameters': metadata.get('parameters', {}),
+                'data_points': len(entry['data'])
+            }
+            summaries.append(summary)
+        return summaries
+
+    def clear_history(self):
+        """Clear all experiment history."""
+        self.history.clear()

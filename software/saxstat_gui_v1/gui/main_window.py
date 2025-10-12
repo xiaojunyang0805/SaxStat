@@ -316,6 +316,14 @@ class MainWindow(QMainWindow):
         analysis_tools_action.triggered.connect(self._on_analysis_tools_clicked)
         analysis_menu.addAction(analysis_tools_action)
 
+        # View menu
+        view_menu = menubar.addMenu("&View")
+
+        overlay_action = QAction("Compare &Experiments...", self)
+        overlay_action.setShortcut("Ctrl+E")
+        overlay_action.triggered.connect(self._on_overlay_clicked)
+        view_menu.addAction(overlay_action)
+
         # Settings menu
         settings_menu = menubar.addMenu("&Settings")
 
@@ -734,6 +742,77 @@ class MainWindow(QMainWindow):
         self.analysis_dialog.show()
         self.analysis_dialog.raise_()
         self.analysis_dialog.activateWindow()
+
+    def _on_overlay_clicked(self):
+        """Handle overlay menu action."""
+        from .overlay_dialog import OverlayDialog
+
+        # Get experiment history
+        history_summary = self.data_manager.get_history_summary()
+
+        if not history_summary:
+            QMessageBox.information(
+                self,
+                "No History",
+                "No experiment history available.\n"
+                "Run some experiments first to enable comparison."
+            )
+            return
+
+        # Show overlay dialog
+        dialog = OverlayDialog(history_summary, self)
+
+        if dialog.exec_() == QDialog.Accepted:
+            # Get selected experiments
+            selected_indices = dialog.get_selected_indices()
+            show_legend = dialog.show_legend()
+
+            # Clear existing overlays
+            self.plot_manager.clear_overlays()
+
+            if not selected_indices:
+                # Clear overlays only
+                self.statusbar.showMessage("Overlays cleared")
+                return
+
+            # Get full history
+            history = self.data_manager.get_history()
+
+            # Add overlays
+            for idx in selected_indices:
+                if 0 <= idx < len(history):
+                    entry = history[idx]
+                    data = entry['data']
+                    metadata = entry['metadata']
+
+                    # Determine x and y columns based on experiment type
+                    exp_name = metadata.get('experiment_name', 'Unknown')
+
+                    # Default to voltage and current
+                    x_col = 'voltage'
+                    y_col = 'current'
+
+                    # Check available columns
+                    if x_col in data.columns and y_col in data.columns:
+                        x_data = data[x_col].tolist()
+                        y_data = data[y_col].tolist()
+
+                        # Create label
+                        start_time = metadata.get('start_time')
+                        if start_time:
+                            time_str = start_time.strftime('%H:%M:%S')
+                            label = f"{exp_name} ({time_str})"
+                        else:
+                            label = f"{exp_name}"
+
+                        # Add overlay
+                        self.plot_manager.add_overlay(x_data, y_data, label=label)
+
+            # Show legend if requested
+            if show_legend and selected_indices:
+                self.plot_manager.show_legend(True)
+
+            self.statusbar.showMessage(f"{len(selected_indices)} experiment(s) overlaid")
 
     def _on_preferences_clicked(self):
         """Handle preferences menu action."""
