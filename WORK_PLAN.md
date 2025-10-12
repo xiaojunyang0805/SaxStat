@@ -152,27 +152,32 @@ This work plan outlines the complete development roadmap for SaxStat GUI v1, bas
   - Experiment defaults (autosave, save_directory, last_experiment)
   - Calibration data (offset_current, tia_resistance, vref)
 
-### 3.4 Parameter Save/Load ✅
+### 3.4 Parameter Save/Load ✅ COMPLETE
 - [x] Configuration save/load on application start/exit
 - [x] Remember last used port
 - [x] Restore window geometry
 - [x] Recall last experiment type
-- [ ] **Experiment parameter presets** (future enhancement)
-  - Save/load specific experiment configurations
-  - Default parameter sets per experiment type
+- [x] **Experiment parameter presets** (v1.1)
+  - Per-experiment save/load/delete with dropdown UI
+  - Stored in config.json under 'presets' namespace
+  - Alphabetically sorted preset list
+  - Confirmation dialogs for delete operations
 
-### 3.5 Autosave Feature 🔄 FRAMEWORK READY
-- [x] Autosave configuration option in config
-- [ ] Implement automatic data save after experiment completion
-- [ ] Configurable save directory
-- [ ] Auto-naming with timestamp
+### 3.5 Autosave Feature ✅ COMPLETE (v1.1)
+- [x] Autosave configuration option in config (enabled by default)
+- [x] Preferences dialog for autosave settings (Ctrl+P)
+- [x] Automatic data save after experiment completion
+- [x] Configurable save directory with Browse button
+- [x] Multiple format support (CSV, JSON, Excel)
+- [x] Auto-naming with timestamp patterns (4 presets + custom)
+- [x] Unique filename generation with suffixes (_001, _002, etc.)
 
 **Deliverables:**
 - ✅ Pandas-based data storage
-- ✅ Three export formats (CSV, Excel framework, JSON)
+- ✅ Three export formats (CSV, JSON, Excel with professional formatting)
 - ✅ JSON configuration system
-- ✅ Basic parameter persistence
-- 🔄 Autosave (framework ready)
+- ✅ Parameter persistence with presets
+- ✅ Autosave with preferences dialog
 
 ---
 
@@ -364,26 +369,64 @@ This work plan outlines the complete development roadmap for SaxStat GUI v1, bas
   - Surface plots for multi-scan CV
   - Contour plots for time-series data
 
-### 5.7 Calibration Features
-- [ ] **Calibration Dialog:**
-  - Guided calibration procedure
-  - Offset current determination
-  - TIA resistance measurement
-  - Reference voltage verification
+### 5.7 Calibration Features ✅ COMPLETE (v1.1)
+- [x] **Calibration Dialog:**
+  - Hardware calibration (offset current, TIA resistance, Vref)
+  - Input validation with helpful error messages
+  - Help text for each parameter
+  - Quick preset buttons (Default, High Sensitivity, Low Sensitivity)
+  - Reset to defaults button
+  - Last calibrated timestamp display
+  - Settings → Calibration menu integration
 
-- [ ] **Calibration History:**
+- [ ] **Calibration History:** (future)
   - Track calibration over time
   - Drift analysis
   - Recalibration alerts
 
+### 5.8 Advanced Data Management ✅ COMPLETE (v1.1)
+- [x] **Excel Export Enhancement:**
+  - Professional 3-sheet format (Data, Metadata, Statistics)
+  - Formatted headers with blue background (#4472C4)
+  - Auto-sized columns
+  - Arial font throughout
+  - Statistics sheet with mean, std, min, max, count
+
+- [x] **Autosave System:**
+  - Preferences dialog (Ctrl+P)
+  - Enable/disable toggle
+  - Configurable directory with Browse button
+  - Filename pattern dropdown (4 presets + custom)
+  - Format selection (CSV, JSON, Excel)
+  - Automatic save on experiment completion
+  - Unique filename generation (suffix _001, _002, etc.)
+
+- [x] **Parameter Presets:**
+  - Per-experiment preset storage
+  - Dropdown selection in parameter panel
+  - Save button with name input dialog
+  - Delete button with confirmation
+  - Stored in config.json under 'presets' namespace
+  - Alphabetically sorted preset list
+
+- [x] **Plot Overlays:**
+  - Experiment history storage (max 50 entries)
+  - View → Compare Experiments menu (Ctrl+E)
+  - Multi-selection dialog with experiment list
+  - Auto-assigned colors (7-color palette)
+  - Legend support with labels
+  - Maximum 5 overlays recommended
+  - Clear all overlays button
+
 **Deliverables:**
 - ✅ Phase 5.1: 4 advanced experiment types (SWV, DPV, NPV, POT)
 - ✅ Phase 5.2: Data analysis suite (Peak Detection, Baseline Correction, Integration, Smoothing)
+- ✅ Phase 5.7: Calibration dialog
+- ✅ Phase 5.8: Advanced data management (Excel, Autosave, Presets, Overlays)
 - 🔄 Phase 5.3: Method builder for automation
 - 🔄 Phase 5.4: Optional database integration
 - 🔄 Phase 5.5: Remote control API
-- 🔄 Phase 5.6: Enhanced plotting capabilities
-- 🔄 Phase 5.7: Calibration features
+- 🔄 Phase 5.6: Enhanced plotting capabilities (partial - overlays complete)
 
 ---
 
@@ -399,7 +442,7 @@ This work plan outlines the complete development roadmap for SaxStat GUI v1, bas
 7. 🔄 Hardware testing and validation
 8. 🔄 User documentation
 
-### Should Have (v1.1 - Polish & Production Ready)
+### Should Have (v1.1 - Polish & Production Ready) ✅ COMPLETE
 1. ✅ LSV experiment
 2. ✅ CA experiment
 3. ✅ SWV and DPV experiments
@@ -408,22 +451,23 @@ This work plan outlines the complete development roadmap for SaxStat GUI v1, bas
 6. ✅ Baseline correction
 7. ✅ Integration/charge calculation
 8. ✅ Smoothing filters
-9. Excel export with openpyxl
-10. Autosave functionality
-11. Experiment parameter presets
-12. Plot overlays (compare multiple experiments)
-13. Calibration dialog
-14. Package executable (PyInstaller)
+9. ✅ Excel export with openpyxl (formatted, multi-sheet)
+10. ✅ Autosave functionality (with preferences dialog)
+11. ✅ Experiment parameter presets (save/load/delete)
+12. ✅ Plot overlays (compare multiple experiments)
+13. ✅ Calibration dialog (hardware calibration)
+14. ⏳ Package executable (PyInstaller) - DEFERRED to v1.2
 
-**Remaining for v1.1:** 6 tasks (items 9-14)
+**v1.1 Status:** 13/14 tasks complete (93%). Packaging deferred to v1.2 after hardware testing.
 
 ### Nice to Have (v1.2 - Testing & Workflow Automation)
-1. Progress indicators
-2. Unit test suite
-3. Method builder basics
-4. Hardware testing suite (all 7 experiments)
-5. Comprehensive user documentation
-6. Publication-ready examples
+1. Package executable (PyInstaller) - moved from v1.1
+2. Progress indicators
+3. Unit test suite
+4. Method builder basics
+5. Hardware testing suite (all 7 experiments)
+6. Comprehensive user documentation
+7. Publication-ready examples
 
 ### Future (v2.0+)
 1. Database integration
@@ -501,19 +545,19 @@ This work plan outlines the complete development roadmap for SaxStat GUI v1, bas
 - [ ] No critical bugs
 - [ ] Ready for daily lab use
 
-### v1.1 Production Ready Release
-**Completed (8/14 tasks - 57%):**
+### v1.1 Production Ready Release ✅ COMPLETE (93%)
+**Completed (13/14 tasks):**
 - [x] LSV and CA experiments functional
 - [x] 7 experiment types supported (CV, LSV, CA, SWV, DPV, NPV, POT)
 - [x] Data analysis tools (peak detection, baseline, integration, smoothing)
+- [x] Excel export with professional formatting (3 sheets: Data, Metadata, Statistics)
+- [x] Autosave functionality with preferences dialog (enable/disable, directory, formats)
+- [x] Experiment parameter presets (per-experiment save/load/delete with dropdown)
+- [x] Plot overlays for experiment comparison (history-based, max 5, with legend)
+- [x] Calibration dialog (offset current, TIA resistance, Vref with presets)
 
-**Remaining (6/14 tasks - 43%):**
-- [ ] Excel export implemented
-- [ ] Autosave working
-- [ ] Experiment parameter presets
-- [ ] Plot overlays for experiment comparison
-- [ ] Calibration dialog
-- [ ] Standalone executable available
+**Deferred to v1.2 (1/14 tasks):**
+- [ ] Standalone executable (PyInstaller) - deferred until after hardware testing
 
 ### v1.2 Testing & Workflow Release
 - [ ] Progress indicators
@@ -559,15 +603,13 @@ This work plan outlines the complete development roadmap for SaxStat GUI v1, bas
 
 ## Notes for Next Session
 
-**Immediate Priorities (v1.1 - 6 Remaining Tasks):**
-
-**Priority Order:**
-1. **Autosave functionality** (critical - prevents data loss)
-2. **Experiment parameter presets** (high productivity boost)
-3. **Excel export implementation** (openpyxl already in requirements)
-4. **Plot overlays** (compare multiple experiments)
-5. **Calibration dialog** (hardware accuracy)
-6. **Package executable** (PyInstaller - do last)
+**v1.1 Completed Features:**
+1. ✅ **Autosave functionality** - Preferences dialog with enable/disable, directory picker, formats
+2. ✅ **Experiment parameter presets** - Per-experiment save/load/delete with dropdown UI
+3. ✅ **Excel export implementation** - Professional 3-sheet format with openpyxl
+4. ✅ **Plot overlays** - History-based comparison with auto-colors and legend
+5. ✅ **Calibration dialog** - Hardware calibration with presets and validation
+6. ✅ **Refactored CV offset current** - Removed from parameters, uses calibration dialog
 
 **Next Phase (v1.2 - Testing & Workflow):**
 1. Progress indicators for long experiments
@@ -579,10 +621,9 @@ This work plan outlines the complete development roadmap for SaxStat GUI v1, bas
 7. Publication-ready examples
 
 **Known Issues:**
-- Excel export requires openpyxl (optional dependency)
-- Calibration dialog not yet implemented (placeholder)
 - Plot zoom/pan uses default pyqtgraph gestures (no custom controls)
-- Autosave framework ready but not activated
+- PyInstaller packaging not yet tested
+- Hardware validation still needed for all 7 experiments
 
 **Future Considerations:**
 - Consider migrating to PyQt6/PySide6 for long-term support
@@ -592,14 +633,14 @@ This work plan outlines the complete development roadmap for SaxStat GUI v1, bas
 
 ---
 
-**Document Version:** 2.4
+**Document Version:** 2.5
 **Last Updated:** 2025-10-12
-**Status:** Phase 1-3 Complete, Phase 4 In Progress (70%), Phase 5.1-5.2 Complete (30% of Phase 5)
+**Status:** Phase 1-3 Complete, Phase 4 In Progress (85%), Phase 5.1-5.2 Complete (30% of Phase 5)
 
 **Version Status:**
 - **v1.0:** Core CV functionality (✅ COMPLETE)
-- **v1.1:** Production Ready (🔄 57% - 8/14 tasks done, 6 remaining)
-  - ✅ Complete: 7 experiments + 4 analysis tools
-  - 🔄 Remaining: Autosave, presets, Excel export, overlays, calibration, packaging
+- **v1.1:** Production Ready (✅ 93% COMPLETE - 13/14 tasks done)
+  - ✅ Complete: 7 experiments, 4 analysis tools, autosave, presets, Excel export, overlays, calibration
+  - ⏳ Deferred to v1.2: PyInstaller packaging (after hardware testing)
 - **v1.2:** Testing & Workflow (📋 PLANNED - 7 tasks)
-  - Focus: Progress indicators, unit tests, method builder, hardware validation, documentation
+  - Focus: Packaging, progress indicators, unit tests, method builder, hardware validation, documentation
