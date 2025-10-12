@@ -213,5 +213,8 @@ site/
 .env.local
 .env.*.local
 
+# Claude Code settings with tokens
+.claude/settings.local.json
+
 # Node modules (if any JavaScript tools are used)
 node_modules/
