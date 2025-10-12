@@ -43,35 +43,62 @@ class PlotManager:
         self._setup_plot()
 
     def _setup_plot(self):
-        """Configure plot appearance."""
+        """Configure plot appearance with Arial font."""
+        from PyQt5.QtGui import QFont
+
         self.plot_item.showGrid(x=True, y=True, alpha=0.3)
-        self.plot_item.setLabel('bottom', 'X Axis')
-        self.plot_item.setLabel('left', 'Y Axis')
+
+        # Set default labels with Arial font
+        label_style = {'color': '#212121', 'font-size': '12pt', 'font-family': 'Arial'}
+        self.plot_item.setLabel('bottom', 'X Axis', **label_style)
+        self.plot_item.setLabel('left', 'Y Axis', **label_style)
 
         # Set background color
         self.widget.setBackground('w')
+
+        # Set tick font and colors
+        tick_font = QFont("Arial", 10)
+        self.widget.getAxis('left').setTextPen('#212121')
+        self.widget.getAxis('bottom').setTextPen('#212121')
+        self.widget.getAxis('left').setPen('#424242')
+        self.widget.getAxis('bottom').setPen('#424242')
+        self.widget.getAxis('left').setStyle(tickFont=tick_font)
+        self.widget.getAxis('bottom').setStyle(tickFont=tick_font)
 
     # Plot configuration
 
     def set_labels(self, x_label: str, y_label: str, title: str = ''):
         """
-        Set plot labels with darker text.
+        Set plot labels with darker text and Arial font.
 
         Args:
             x_label: X-axis label with unit (e.g., 'Time (s)')
             y_label: Y-axis label with unit (e.g., 'Current (µA)')
             title: Plot title
         """
-        self.plot_item.setLabel('bottom', x_label, color='#212121', size='12pt')
-        self.plot_item.setLabel('left', y_label, color='#212121', size='12pt')
-        if title:
-            self.plot_item.setTitle(title, color='#212121', size='13pt')
+        from PyQt5.QtGui import QFont
 
-        # Update axis text colors
+        # Create font for tick numbers
+        tick_font = QFont("Arial", 10)
+
+        # Set labels with CSS-style formatting for Arial font
+        label_style = {'color': '#212121', 'font-size': '12pt', 'font-family': 'Arial'}
+
+        self.plot_item.setLabel('bottom', x_label, **label_style)
+        self.plot_item.setLabel('left', y_label, **label_style)
+
+        if title:
+            # Set title with HTML formatting for Arial font
+            title_html = f'<span style="color: #212121; font-size: 13pt; font-family: Arial; font-weight: bold;">{title}</span>'
+            self.plot_item.setTitle(title_html)
+
+        # Update axis text colors and tick font
         self.widget.getAxis('left').setTextPen('#212121')
         self.widget.getAxis('bottom').setTextPen('#212121')
         self.widget.getAxis('left').setPen('#424242')
         self.widget.getAxis('bottom').setPen('#424242')
+        self.widget.getAxis('left').setStyle(tickFont=tick_font)
+        self.widget.getAxis('bottom').setStyle(tickFont=tick_font)
 
     def set_axis_ranges(self, x_range: Tuple[float, float],
                        y_range: Tuple[float, float]):

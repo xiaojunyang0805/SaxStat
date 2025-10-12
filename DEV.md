@@ -441,6 +441,33 @@ Run with: `python run.py` from saxstat_gui_v1/ directory
 - ✅ Analysis Panel UI complete with all controls
 - ✅ GUI integration complete with interactive visualizations
 
+### UX Improvement
+- **Issue:** Analysis tools panel caused layout issues when window resized
+- **Fix:** Moved analysis tools from left panel to "Analysis" menu
+- **Implementation:**
+  - Added "Analysis" menu to top menu bar (keyboard shortcut: Ctrl+A)
+  - Analysis panel opens as non-modal dialog (450x600 minimum size)
+  - Dialog created once and reused (prevents widget reparenting issues)
+  - Can stay open while running experiments
+- **Result:** Cleaner main window, better usability, no layout conflicts
+
+### Font Styling Fix
+- **Issue:** Plot titles not rendering in Arial font (axis labels worked but titles didn't)
+- **Root Cause:** PyQtGraph's `setTitle()` doesn't accept CSS-style dictionaries like `setLabel()` does
+- **Investigation:** Multiple iterations to understand pyqtgraph font rendering:
+  1. First tried QFont objects → Only tick numbers changed
+  2. Then tried CSS-style dictionaries → Labels changed but not titles
+  3. Found that titles need HTML formatting instead
+- **Solution:** Use HTML span tags with inline styles for titles:
+  ```python
+  title_html = f'<span style="color: #212121; font-size: 13pt; font-family: Arial; font-weight: bold;">{title}</span>'
+  self.plot_item.setTitle(title_html)
+  ```
+- **Files Modified:**
+  - `plot_manager.py:90-93` - Changed setTitle() to use HTML formatting
+  - All plot titles now render consistently in Arial font
+- **Result:** All text in graph panels (titles, axis labels, tick numbers) now displays in Arial
+
 ---
 
 ## Next Session - Remaining Tasks

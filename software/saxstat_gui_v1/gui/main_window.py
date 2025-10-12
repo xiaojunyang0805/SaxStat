@@ -231,12 +231,14 @@ class MainWindow(QMainWindow):
         control_group.setLayout(control_layout)
         left_layout.addWidget(control_group)
 
-        # Analysis panel
+        left_layout.addStretch()
+
+        # Analysis panel (will be shown as dialog)
         self.analysis_panel = AnalysisPanel()
         self.analysis_panel.analysis_applied.connect(self._on_analysis_applied)
-        left_layout.addWidget(self.analysis_panel)
 
-        left_layout.addStretch()
+        # Analysis dialog (created once, reused)
+        self.analysis_dialog = None
 
         # Right panel - Dual plots (Applied Voltage + Main Data)
         right_panel = QWidget()
@@ -246,30 +248,22 @@ class MainWindow(QMainWindow):
         self.voltage_time_widget = pg.PlotWidget()
         self.voltage_time_widget.setBackground('w')
         self.voltage_time_widget.showGrid(x=True, y=True)
-        self.voltage_time_widget.setLabel('left', 'Voltage (V)', color='#212121', size='12pt')
-        self.voltage_time_widget.setLabel('bottom', 'Time (s)', color='#212121', size='12pt')
-        self.voltage_time_widget.setTitle("Applied Voltage vs Time", color='#212121', size='13pt')
-        # Make axis text darker
-        self.voltage_time_widget.getAxis('left').setTextPen('#212121')
-        self.voltage_time_widget.getAxis('bottom').setTextPen('#212121')
-        self.voltage_time_widget.getAxis('left').setPen('#424242')
-        self.voltage_time_widget.getAxis('bottom').setPen('#424242')
+        # Axis styling will be set by PlotManager after initialization
         right_layout.addWidget(self.voltage_time_widget)
 
         # Main data plot (right - current vs voltage or time)
         self.plot_widget = pg.PlotWidget()
         self.plot_widget.setBackground('w')
         self.plot_widget.showGrid(x=True, y=True)
-        # Make axis text darker
-        self.plot_widget.getAxis('left').setTextPen('#212121')
-        self.plot_widget.getAxis('bottom').setTextPen('#212121')
-        self.plot_widget.getAxis('left').setPen('#424242')
-        self.plot_widget.getAxis('bottom').setPen('#424242')
+        # Axis styling will be set by PlotManager after initialization
         right_layout.addWidget(self.plot_widget)
 
         # Create plot managers
         self.plot_manager = PlotManager(self.plot_widget)
         self.voltage_plot_manager = PlotManager(self.voltage_time_widget)
+
+        # Set labels for voltage plot after PlotManager initialization (override defaults)
+        self.voltage_plot_manager.set_labels('Time (s)', 'Voltage (V)', 'Applied Voltage vs Time')
 
         # Analysis visualization items
         self.peak_markers = []
@@ -312,6 +306,14 @@ class MainWindow(QMainWindow):
         exit_action.setShortcut("Ctrl+Q")
         exit_action.triggered.connect(self.close)
         file_menu.addAction(exit_action)
+
+        # Analysis menu
+        analysis_menu = menubar.addMenu("&Analysis")
+
+        analysis_tools_action = QAction("&Data Analysis Tools", self)
+        analysis_tools_action.setShortcut("Ctrl+A")
+        analysis_tools_action.triggered.connect(self._on_analysis_tools_clicked)
+        analysis_menu.addAction(analysis_tools_action)
 
         # Settings menu
         settings_menu = menubar.addMenu("&Settings")
@@ -612,6 +614,25 @@ class MainWindow(QMainWindow):
 
             except Exception as e:
                 QMessageBox.critical(self, "Save Error", f"Failed to save plot:\n{str(e)}")
+
+    def _on_analysis_tools_clicked(self):
+        """Handle analysis tools menu action."""
+        from PyQt5.QtWidgets import QDialog, QVBoxLayout
+
+        # Create dialog only once
+        if self.analysis_dialog is None:
+            self.analysis_dialog = QDialog(self)
+            self.analysis_dialog.setWindowTitle("Data Analysis Tools")
+            self.analysis_dialog.setMinimumSize(450, 600)
+
+            # Add analysis panel to dialog
+            layout = QVBoxLayout(self.analysis_dialog)
+            layout.addWidget(self.analysis_panel)
+
+        # Show dialog (non-modal so it can stay open)
+        self.analysis_dialog.show()
+        self.analysis_dialog.raise_()
+        self.analysis_dialog.activateWindow()
 
     def _on_calibration_clicked(self):
         """Handle calibration menu action."""
