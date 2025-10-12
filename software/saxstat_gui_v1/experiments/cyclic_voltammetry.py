@@ -78,14 +78,6 @@ class CyclicVoltammetry(BaseExperiment):
                 'max': 10,
                 'unit': 'cycles',
                 'description': 'Number of cycles'
-            },
-            'offset_current': {
-                'type': float,
-                'default': 0.0,
-                'min': -1000,
-                'max': 1000,
-                'unit': 'µA',
-                'description': 'Offset current for baseline correction'
             }
         }
 
@@ -267,10 +259,16 @@ class CyclicVoltammetry(BaseExperiment):
 
     # Hook methods
 
-    def on_configured(self):
-        """Called after configuration - store offset current."""
-        if 'offset_current' in self.parameters:
-            self.offset_current = self.parameters['offset_current']
+    def load_calibration(self, calibration: Dict[str, float]):
+        """
+        Load calibration values from ConfigManager.
+
+        Args:
+            calibration: Dict with 'offset_current', 'tia_resistance', 'vref'
+        """
+        self.offset_current = calibration.get('offset_current', 0.0)
+        self.tia_resistance = calibration.get('tia_resistance', 10000)
+        self.vref = calibration.get('vref', 1.0)
 
     def on_started(self):
         """Called when experiment starts - reset counters."""

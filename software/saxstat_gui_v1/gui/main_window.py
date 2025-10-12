@@ -410,6 +410,11 @@ class MainWindow(QMainWindow):
             # Create experiment instance
             self.current_experiment = self.experiment_registry.create(exp_name)
 
+            # Load calibration values into experiment
+            if hasattr(self.current_experiment, 'load_calibration'):
+                calibration = self.config.get_calibration()
+                self.current_experiment.load_calibration(calibration)
+
             # Update parameter panel
             self.param_panel.set_experiment(self.current_experiment)
 
