@@ -12,6 +12,7 @@ from PyQt5.QtWidgets import (
 )
 from PyQt5.QtCore import pyqtSignal, QTimer, Qt
 from pathlib import Path
+from datetime import datetime
 import pyqtgraph as pg
 
 from ..experiments import get_registry, BaseExperiment, ExperimentState
@@ -318,6 +319,13 @@ class MainWindow(QMainWindow):
         # Settings menu
         settings_menu = menubar.addMenu("&Settings")
 
+        preferences_action = QAction("&Preferences", self)
+        preferences_action.setShortcut("Ctrl+P")
+        preferences_action.triggered.connect(self._on_preferences_clicked)
+        settings_menu.addAction(preferences_action)
+
+        settings_menu.addSeparator()
+
         calibration_action = QAction("&Calibration", self)
         calibration_action.triggered.connect(self._on_calibration_clicked)
         settings_menu.addAction(calibration_action)
@@ -523,7 +531,13 @@ class MainWindow(QMainWindow):
         if state == ExperimentState.COMPLETED:
             self._reset_ui_after_experiment()
             self.save_btn.setEnabled(True)
-            self.statusbar.showMessage("Experiment completed")
+
+            # Auto-save if enabled
+            if self.config.get('autosave.enabled', True):
+                self._auto_save_data()
+            else:
+                self.statusbar.showMessage("Experiment completed")
+
             self.experiment_completed.emit()
 
         elif state == ExperimentState.ERROR:
@@ -598,6 +612,93 @@ class MainWindow(QMainWindow):
             except Exception as e:
                 QMessageBox.critical(self, "Save Error", f"Failed to save data:\n{str(e)}")
 
+    def _auto_save_data(self):
+        """Automatically save experiment data based on configuration."""
+        try:
+            # Check if there's data to save
+            if self.data_manager.data is None or self.data_manager.data.empty:
+                self.statusbar.showMessage("Experiment completed (no data to save)")
+                return
+
+            # Get autosave configuration
+            save_dir = Path(self.config.get('autosave.directory', '~/Documents/SaxStat/Data')).expanduser()
+            filename_pattern = self.config.get('autosave.filename_pattern', '{experiment}_{timestamp}')
+            formats = self.config.get('autosave.formats', ['csv'])
+            create_dir = self.config.get('autosave.create_directory', True)
+
+            # Create directory if needed
+            if create_dir:
+                save_dir.mkdir(parents=True, exist_ok=True)
+
+            # Generate filename from pattern
+            timestamp = datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
+            exp_name = self.current_experiment.get_name() if self.current_experiment else 'Unknown'
+
+            filename_base = filename_pattern.format(
+                experiment=exp_name,
+                timestamp=timestamp,
+                date=datetime.now().strftime('%Y-%m-%d'),
+                time=datetime.now().strftime('%H-%M-%S')
+            )
+
+            # Save in all configured formats
+            saved_files = []
+            for fmt in formats:
+                # Generate filepath with suffix protection
+                filepath = self._get_unique_filepath(save_dir, filename_base, fmt)
+
+                # Save based on format
+                if fmt == 'csv':
+                    self.data_manager.export_csv(filepath)
+                elif fmt == 'json':
+                    self.data_manager.export_json(filepath)
+                elif fmt == 'excel':
+                    self.data_manager.export_excel(filepath)
+
+                saved_files.append(filepath.name)
+
+            # Show success message
+            if len(saved_files) == 1:
+                self.statusbar.showMessage(f"Data auto-saved to: {saved_files[0]}")
+            else:
+                self.statusbar.showMessage(f"Data auto-saved to: {', '.join(saved_files)}")
+
+        except Exception as e:
+            # Show error message but don't block user
+            error_msg = f"Autosave failed: {str(e)}"
+            self.statusbar.showMessage(error_msg)
+            print(f"ERROR: {error_msg}")  # Log to console for debugging
+
+    def _get_unique_filepath(self, directory: Path, filename_base: str, extension: str) -> Path:
+        """
+        Generate unique filepath with suffix if file exists.
+
+        Args:
+            directory: Target directory
+            filename_base: Base filename without extension
+            extension: File extension (csv, json, excel)
+
+        Returns:
+            Unique filepath
+        """
+        filepath = directory / f"{filename_base}.{extension}"
+
+        # If file doesn't exist, return as-is
+        if not filepath.exists():
+            return filepath
+
+        # Add numeric suffix until we find unique name
+        counter = 1
+        while True:
+            filepath = directory / f"{filename_base}_{counter:03d}.{extension}"
+            if not filepath.exists():
+                return filepath
+            counter += 1
+
+            # Safety check to prevent infinite loop
+            if counter > 999:
+                raise ValueError("Too many files with same base name (>999)")
+
     def _on_save_plot_clicked(self):
         """Handle save plot menu action."""
         file_path, _ = QFileDialog.getSaveFileName(
@@ -633,6 +734,13 @@ class MainWindow(QMainWindow):
         self.analysis_dialog.show()
         self.analysis_dialog.raise_()
         self.analysis_dialog.activateWindow()
+
+    def _on_preferences_clicked(self):
+        """Handle preferences menu action."""
+        from .preferences_dialog import PreferencesDialog
+
+        dialog = PreferencesDialog(self.config, self)
+        dialog.exec_()
 
     def _on_calibration_clicked(self):
         """Handle calibration menu action."""

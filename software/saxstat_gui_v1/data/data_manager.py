@@ -133,21 +133,83 @@ class DataManager:
 
     def export_excel(self, filepath: Path):
         """
-        Export data to Excel format with metadata sheet.
+        Export data to Excel format with formatted sheets.
+
+        Creates a professional Excel workbook with:
+        - Data sheet with formatted headers
+        - Metadata sheet with experiment information
+        - Statistics sheet with calculated statistics
+        - Auto-sized columns
+        - Header formatting
 
         Args:
             filepath: Output file path
         """
-        with pd.ExcelWriter(filepath, engine='openpyxl') as writer:
-            # Data sheet
-            self.data.to_excel(writer, sheet_name='Data', index=False)
+        from openpyxl.styles import Font, PatternFill, Alignment
+        from openpyxl.utils import get_column_letter
 
-            # Metadata sheet
+        with pd.ExcelWriter(filepath, engine='openpyxl') as writer:
+            # 1. Data sheet
+            self.data.to_excel(writer, sheet_name='Data', index=False)
+            data_sheet = writer.sheets['Data']
+
+            # Format data headers
+            header_fill = PatternFill(start_color='4472C4', end_color='4472C4', fill_type='solid')
+            header_font = Font(color='FFFFFF', bold=True, name='Arial', size=11)
+
+            for col_idx, col in enumerate(self.data.columns, 1):
+                cell = data_sheet.cell(row=1, column=col_idx)
+                cell.fill = header_fill
+                cell.font = header_font
+                cell.alignment = Alignment(horizontal='center', vertical='center')
+
+            # Auto-size columns
+            for col_idx, col in enumerate(self.data.columns, 1):
+                column_letter = get_column_letter(col_idx)
+                max_length = max(
+                    len(str(col)),
+                    self.data[col].astype(str).str.len().max() if not self.data.empty else 0
+                )
+                data_sheet.column_dimensions[column_letter].width = min(max_length + 2, 50)
+
+            # 2. Metadata sheet
             meta_df = pd.DataFrame([
                 {'Key': k, 'Value': str(v)}
                 for k, v in self.metadata.items()
             ])
             meta_df.to_excel(writer, sheet_name='Metadata', index=False)
+            meta_sheet = writer.sheets['Metadata']
+
+            # Format metadata headers
+            for col_idx in range(1, 3):  # Key and Value columns
+                cell = meta_sheet.cell(row=1, column=col_idx)
+                cell.fill = header_fill
+                cell.font = header_font
+                cell.alignment = Alignment(horizontal='center', vertical='center')
+
+            # Auto-size metadata columns
+            meta_sheet.column_dimensions['A'].width = 20
+            meta_sheet.column_dimensions['B'].width = 50
+
+            # 3. Statistics sheet
+            stats = self.get_statistics()
+            if stats:
+                stats_df = pd.DataFrame(stats).T
+                stats_df.reset_index(inplace=True)
+                stats_df.columns = ['Column'] + list(stats_df.columns[1:])
+                stats_df.to_excel(writer, sheet_name='Statistics', index=False)
+                stats_sheet = writer.sheets['Statistics']
+
+                # Format statistics headers
+                for col_idx in range(1, len(stats_df.columns) + 1):
+                    cell = stats_sheet.cell(row=1, column=col_idx)
+                    cell.fill = header_fill
+                    cell.font = header_font
+                    cell.alignment = Alignment(horizontal='center', vertical='center')
+
+                # Auto-size statistics columns
+                for col_idx in range(1, len(stats_df.columns) + 1):
+                    stats_sheet.column_dimensions[get_column_letter(col_idx)].width = 15
 
     def export_json(self, filepath: Path):
         """

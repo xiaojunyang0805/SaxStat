@@ -33,9 +33,14 @@ class ConfigManager:
             'theme': 'light'
         },
         'experiments': {
-            'autosave': False,
-            'save_directory': '',
             'last_experiment': 'CV'
+        },
+        'autosave': {
+            'enabled': True,  # ON by default
+            'directory': '~/Documents/SaxStat/Data',
+            'filename_pattern': '{experiment}_{timestamp}',
+            'formats': ['csv'],  # CSV only by default
+            'create_directory': True
         },
         'calibration': {
             'offset_current': 0.0,
