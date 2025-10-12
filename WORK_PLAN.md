@@ -1,471 +1,551 @@
-# SaxStat GUI Improvement Work Plan
+# SaxStat GUI v1 Development Work Plan
 
-**Project:** SaxStat Potentiostat PCB for Electrochemistry Testing
-**Current Status:** Prototype v03 hardware complete, GUI functional for basic CV only
-**Reference Project:** DStat (University of Toronto - Wheeler Microfluidics Lab)
-**Date:** 2025-10-12
+**Project:** SaxStat Portable Potentiostat
+**Current Status:** Prototype v03 hardware complete, GUI v1 with 7 experiments complete, ready for hardware testing
+**Reference:** DStat Potentiostat (University of Toronto - Wheeler Microfluidics Lab)
+**Last Updated:** 2025-10-12
 
 ---
 
 ## Overview
 
-This work plan outlines the roadmap for organizing the SaxStat project and enhancing the GUI software by leveraging the open-source DStat project as a reference. The current GUI (`D:\2025_SaxStat\prototype_v03\GUI_V03`) supports basic cyclic voltammetry and needs expansion to support multiple electrochemical techniques.
+This work plan outlines the complete development roadmap for SaxStat GUI v1, based on architectural analysis of the DStat reference project. The plan progresses from core architecture through advanced features, emphasizing modularity, extensibility, and reliability.
+
+**Current Achievement:** Phase 1-3 complete, Phase 5.1 complete (7 experiments), Phase 4 in progress (~90% of v1.2)
 
 ---
 
-## Phase 1: Project Organization & Setup
+## Phase 1: Core Architecture ✅ COMPLETED
 
-### 1.1 Organize Folder Structure
-**Goal:** Restructure project for better organization and GitHub readiness
+**Duration:** Weeks 1-2 | **Status:** ✅ Complete
 
-**Proposed Structure:**
-```
-SaxStat/
-├── hardware/              # PCB design files
-│   ├── design_files/      # EasyEDA source files
-│   ├── gerbers/           # Manufacturing files
-│   ├── bom/               # Bill of materials
-│   └── 3d_models/         # 3D models and enclosures
-├── firmware/              # ESP32 firmware
-│   ├── src/               # Source code
-│   ├── lib/               # Libraries
-│   └── platformio.ini     # Build configuration
-├── software/              # GUI applications
-│   ├── saxstat_gui/       # Main GUI application
-│   ├── experiments/       # Experiment modules
-│   ├── utils/             # Utility functions
-│   └── requirements.txt   # Python dependencies
-├── docs/                  # Documentation
-│   ├── user_guide/        # User documentation
-│   ├── hardware/          # Hardware documentation
-│   ├── datasheets/        # Component datasheets
-│   └── test_reports/      # Testing and calibration
-├── reference/             # Reference designs
-│   ├── DStat/             # DStat reference project
-│   └── papers/            # Research papers
-├── examples/              # Example data
-│   └── test_data/         # Sample electrochemical data
-├── .gitignore
-├── README.md
-└── LICENSE
-```
+### 1.1 Project Organization ✅
+- [x] Reorganize folder structure (hardware/, firmware/, software/, docs/, examples/)
+- [x] Initialize git repository with comprehensive .gitignore
+- [x] Create .gitattributes for line endings
+- [x] Push to GitHub: https://github.com/xiaojunyang0805/SaxStat
+- [x] Separate v0 (legacy) from v1 (new modular GUI)
 
-**Current folders to reorganize:**
-- `3D model/` → `hardware/3d_models/`
-- `EasyEDA_file/` → `hardware/design_files/`
-- `JLC parts/` → `hardware/bom/`
-- `prototype_v03/GUI_V03/` → `software/saxstat_gui/`
-- `Electrochemical Test/` → `examples/test_data/`
-- `docs/` → Keep but organize better
-- `SaxStat_private docs/` → Exclude from public GitHub
+### 1.2 Qt5 Project Structure ✅
+- [x] Setup saxstat_gui_v1/ with modular architecture
+- [x] Create main application entry point (main.py, run.py)
+- [x] Implement main window with serial port selection
+- [x] Add experiment selection dropdown
+- [x] Build menu system (File, Settings, Help)
 
-### 1.2 Initialize Git Repository
-**Goal:** Set up version control with proper configuration
+### 1.3 Hardware Communication ✅
+- [x] Implement SerialManager with thread-safe async I/O (220 lines)
+- [x] Background read thread for non-blocking serial communication
+- [x] Qt signals for connected/disconnected/data_received/error events
+- [x] Auto-reconnect functionality
+- [x] Compatible with prototype v03 firmware protocol
 
-**Tasks:**
-- [ ] Initialize git repository
-- [ ] Create comprehensive `.gitignore`:
-  - Python bytecode (`*.pyc`, `__pycache__/`)
-  - Virtual environments (`venv/`, `.venv/`)
-  - IDE files (`.idea/`, `.vscode/`)
-  - Build artifacts (`build/`, `dist/`, `*.spec`)
-  - Private documentation (`*_private*/`)
-  - Temporary files (`*.tmp`, `*.bak`)
-  - OS files (`.DS_Store`, `Thumbs.db`)
-- [ ] Create initial commit with organized structure
-- [ ] Set up `.gitattributes` for line endings
+### 1.4 Experiment Framework ✅
+- [x] Define BaseExperiment abstract class (268 lines)
+- [x] Template method pattern for experiment lifecycle
+- [x] State machine (IDLE, RUNNING, COMPLETED, ERROR)
+- [x] Qt signals for state_changed/data_received/progress/error
+- [x] Abstract methods: get_name(), get_parameters(), validate_parameters(), generate_command(), process_data_point()
+
+### 1.5 Real-time Plotting ✅
+- [x] Implement PlotManager with pyqtgraph (186 lines)
+- [x] High-performance real-time plotting
+- [x] Auto-scaling and grid display
+- [x] Plot export to PNG/JPEG
+- [x] Dynamic axis labels based on experiment type
+
+**Deliverables:**
+- ✅ Functional GUI skeleton with all core components
+- ✅ Main window with experiment selection and controls
+- ✅ Thread-safe serial communication
+- ✅ Real-time plotting framework
+- ✅ Base experiment class ready for implementations
 
 ---
 
-## Phase 2: DStat Analysis & Learning
+## Phase 2: Experiment Support ✅ COMPLETE
 
-### 2.1 Clone and Study DStat
-**Goal:** Understand DStat architecture and implementation
+**Duration:** Weeks 3-4 | **Status:** ✅ Complete (CV, LSV, CA)
 
-**DStat Resources:**
-- **GitLab:** https://microfluidics.utoronto.ca/gitlab/dstat/dstat-interface
-- **GitHub Fork:** https://github.com/wheeler-microfluidics/dstat-interface-mrbox
-- **Paper:** "DStat: A Versatile, Open-Source Potentiostat for Electroanalysis and Integration" (PLOS ONE, 2015)
+### 2.1 Experiment Registry Pattern ✅
+- [x] Create ExperimentRegistry singleton (116 lines)
+- [x] Auto-registration decorator `@register_experiment`
+- [x] Dynamic experiment creation by name
+- [x] List all available experiments
 
-**Tasks:**
-- [ ] Clone DStat interface repository
-- [ ] Review project structure and architecture
-- [ ] Document key design patterns
-- [ ] Identify reusable components
+### 2.2 Parameter UI System ✅
+- [x] Implement ParameterPanel widget (177 lines)
+- [x] Dynamic widget generation from experiment parameter schema
+- [x] Type-specific inputs (QSpinBox, QDoubleSpinBox, QLineEdit)
+- [x] Min/max validation
+- [x] Unit display
+- [x] Configure button with validation feedback
 
-### 2.2 Analyze DStat Features
-**Goal:** Extract relevant features for SaxStat implementation
+### 2.3 Cyclic Voltammetry (CV) ✅
+- [x] Implement CyclicVoltammetry experiment (293 lines)
+- [x] Parameter schema (start_voltage, end_voltage, scan_rate, cycles, offset_current)
+- [x] Firmware command generation: `START:<v1>:<v2>:<rate>:<cycles>`
+- [x] Data processing: ADC → current calculation with TIA equation
+- [x] Skip initial transient points (first 50)
+- [x] Plot configuration: Applied Voltage (V) vs Current (µA)
+- [x] Compatible with v0 firmware protocol
 
-**Key Features to Study:**
+### 2.4 Additional Techniques ✅ COMPLETE
+- [x] **Linear Sweep Voltammetry (LSV)** - Complete (280 lines)
+  - Similar to CV but single sweep
+  - Parameters: start, stop, scan_rate
+  - Plot: Voltage vs Current
 
-1. **Experiment Types:**
-   - Cyclic Voltammetry (CV) ✓ (already implemented)
-   - Linear Sweep Voltammetry (LSV)
-   - Square Wave Voltammetry (SWV)
-   - Differential Pulse Voltammetry (DPV)
-   - Normal Pulse Voltammetry (NPV)
-   - Chronoamperometry (CA)
-   - Chronocoulometry (CC)
+- [x] **Chronoamperometry (CA)** - Complete (285 lines)
+  - Step potential over time
+  - Parameters: potential, duration
+  - Plot: Time vs Current
 
-2. **Architecture Components:**
-   - Parameter management system
-   - Experiment class hierarchy
-   - Data acquisition pipeline
-   - Real-time plotting engine
-   - Serial communication protocol
-   - File I/O and data formats
-   - Error handling and validation
+### 2.5 Hardware Testing ✅ READY, 🔄 NEEDS VALIDATION
+- [x] GUI fully functional for testing
+- [ ] Test CV with prototype v03 hardware
+- [ ] Verify parameter ranges
+- [ ] Validate data acquisition accuracy
+- [ ] Test plot update performance
+- [ ] Check error handling
 
-3. **UI/UX Patterns:**
-   - Parameter input forms
-   - Experiment selection
-   - Plot management
-   - Status indicators
-   - Data export workflow
-
-**Deliverable:** Create `docs/DStat_Analysis.md` with findings
-
----
-
-## Phase 3: GUI Architecture Design
-
-### 3.1 Design Modular Architecture
-**Goal:** Create scalable, maintainable GUI framework
-
-**Core Components:**
-
-1. **Experiment Module System**
-   ```python
-   # Base class for all experiments
-   class BaseExperiment:
-       - get_parameters()
-       - validate_parameters()
-       - generate_command()
-       - process_data()
-       - get_plots()
-
-   # Specific experiments inherit
-   class CyclicVoltammetry(BaseExperiment)
-   class LinearSweep(BaseExperiment)
-   class Chronoamperometry(BaseExperiment)
-   ```
-
-2. **Communication Layer**
-   ```python
-   class SerialManager:
-       - connect()
-       - disconnect()
-       - send_command()
-       - read_data()
-       - handle_errors()
-   ```
-
-3. **Data Management**
-   ```python
-   class DataManager:
-       - add_data_point()
-       - get_data()
-       - export_data()
-       - load_data()
-   ```
-
-4. **Plot Manager**
-   ```python
-   class PlotManager:
-       - create_plot()
-       - update_plot()
-       - export_plot()
-       - overlay_plots()
-   ```
-
-**Deliverable:** Create `docs/Architecture_Design.md`
-
-### 3.2 Define File Structure
-**Goal:** Organize code for maintainability
-
-```
-software/saxstat_gui/
-├── main.py                    # Application entry point
-├── gui/
-│   ├── main_window.py         # Main GUI window
-│   ├── parameter_panel.py     # Parameter input panel
-│   ├── plot_panel.py          # Plotting panel
-│   └── status_bar.py          # Status display
-├── experiments/
-│   ├── base_experiment.py     # Base class
-│   ├── cyclic_voltammetry.py  # CV experiment
-│   ├── linear_sweep.py        # LSV experiment
-│   ├── chronoamperometry.py   # CA experiment
-│   └── square_wave.py         # SWV experiment
-├── communication/
-│   ├── serial_manager.py      # Serial communication
-│   └── protocol.py            # Command protocol
-├── data/
-│   ├── data_manager.py        # Data handling
-│   ├── processors.py          # Data processing
-│   └── exporters.py           # Export formats
-├── plotting/
-│   ├── plot_manager.py        # Plot management
-│   └── plot_widgets.py        # Custom plot widgets
-├── config/
-│   ├── settings.py            # Application settings
-│   └── calibration.py         # Calibration data
-└── utils/
-    ├── validators.py          # Input validation
-    └── helpers.py             # Helper functions
-```
+**Deliverables:**
+- ✅ CV experiment fully implemented and integrated
+- ✅ Experiment registry system working
+- ✅ Dynamic parameter UI system
+- ✅ LSV, CA experiments complete
+- 🔄 Hardware validation results
 
 ---
 
-## Phase 4: GUI Implementation
+## Phase 3: Data Management ✅ COMPLETE
 
-### 4.1 Implement Multi-Experiment Framework
-**Goal:** Extend GUI to support multiple electrochemical techniques
+**Duration:** Weeks 5-6 | **Status:** ✅ Complete
 
-**Priority Order:**
-1. **Linear Sweep Voltammetry (LSV)** - Similar to CV, good starting point
-2. **Chronoamperometry (CA)** - Different plot type (current vs time)
-3. **Square Wave Voltammetry (SWV)** - More complex waveform
-4. **Differential Pulse Voltammetry (DPV)** - Advanced technique
+### 3.1 Data Storage ✅
+- [x] Implement DataManager with pandas (197 lines)
+- [x] DataFrame-based data collection
+- [x] Add metadata storage (experiment type, parameters, timestamp)
+- [x] Clear and reset functionality
 
-**For Each Experiment:**
-- [ ] Create experiment class
-- [ ] Design parameter input UI
-- [ ] Implement firmware command generation
-- [ ] Add data processing logic
-- [ ] Create appropriate plots
-- [ ] Write unit tests
+### 3.2 Data Export ✅
+- [x] **CSV Export** - Basic with metadata as comments
+  - Timestamp and parameters in header
+  - Column names
+  - Human-readable format
 
-### 4.2 Enhance Data Export
-**Goal:** Provide flexible data export options
+- [x] **Excel Export** - Framework ready
+  - Multi-sheet support (data + metadata + analysis)
+  - Requires openpyxl package
 
-**Features:**
-- [ ] **CSV Export** (existing, enhance with metadata)
-- [ ] **JSON Export** (structured data with full parameters)
-- [ ] **Excel Export** (multiple sheets: data, parameters, plots)
-- [ ] **Batch Export** (export multiple experiments)
-- [ ] **Custom Templates** (user-defined export formats)
+- [x] **JSON Export** - Structured format
+  - Complete experiment data with nested structure
+  - Includes metadata and parameters
 
-**Metadata to Include:**
-- Experiment type and parameters
-- Timestamp and duration
-- Hardware configuration (TIA resistance, Vref, etc.)
-- Calibration data
-- Software version
-- User notes
+### 3.3 Configuration Management ✅
+- [x] Implement ConfigManager with JSON (196 lines)
+- [x] Persistent settings in ~/.saxstat/config.json
+- [x] Default values with merge-on-load
+- [x] Hierarchical configuration:
+  - Serial settings (baudrate, timeout, last_port)
+  - UI preferences (window size, theme)
+  - Experiment defaults (autosave, save_directory, last_experiment)
+  - Calibration data (offset_current, tia_resistance, vref)
 
-### 4.3 Advanced Plotting Features
-**Goal:** Professional-grade data visualization
+### 3.4 Parameter Save/Load ✅
+- [x] Configuration save/load on application start/exit
+- [x] Remember last used port
+- [x] Restore window geometry
+- [x] Recall last experiment type
+- [ ] **Experiment parameter presets** (future enhancement)
+  - Save/load specific experiment configurations
+  - Default parameter sets per experiment type
 
-**Features:**
-- [ ] **Plot Overlay:** Compare multiple experiments on same axes
-- [ ] **Zoom/Pan Controls:** Interactive plot navigation
-- [ ] **Plot Export:** Save as PNG, SVG, PDF
-- [ ] **Customization:**
-  - Axis labels and units
-  - Line colors and styles
-  - Grid options
-  - Legend positioning
-- [ ] **Multiple View Modes:**
-  - Single plot
+### 3.5 Autosave Feature 🔄 FRAMEWORK READY
+- [x] Autosave configuration option in config
+- [ ] Implement automatic data save after experiment completion
+- [ ] Configurable save directory
+- [ ] Auto-naming with timestamp
+
+**Deliverables:**
+- ✅ Pandas-based data storage
+- ✅ Three export formats (CSV, Excel framework, JSON)
+- ✅ JSON configuration system
+- ✅ Basic parameter persistence
+- 🔄 Autosave (framework ready)
+
+---
+
+## Phase 4: Polish & Testing 🔄 IN PROGRESS
+
+**Duration:** Weeks 7-8 | **Status:** 🔄 60% Complete
+
+### 4.1 Error Handling & User Feedback ✅ MOSTLY DONE
+- [x] Serial error handling with user messages
+- [x] Parameter validation error dialogs
+- [x] Experiment error signals
+- [x] Status bar real-time updates
+- [ ] Progress indicators for long operations
+- [ ] Connection timeout handling
+- [ ] Graceful handling of USB disconnection
+
+### 4.2 Plot Export ✅ COMPLETE
+- [x] PNG export
+- [x] JPEG export
+- [x] Menu action for save plot
+- [ ] **PDF export** (future enhancement)
+- [ ] **SVG export** for publications (future)
+
+### 4.3 User Documentation 🔄 PARTIAL
+- [x] README.md for v1 GUI (comprehensive)
+- [x] Usage instructions
+- [x] Architecture description
+- [x] Development status
+- [ ] **User Guide:**
+  - [ ] Installation instructions
+  - [ ] Getting started tutorial
+  - [ ] Experiment-specific guides
+  - [ ] Troubleshooting section
+  - [ ] Calibration procedures
+- [ ] **Screenshots and examples**
+
+### 4.4 Comprehensive Testing 🔄 READY TO START
+- [x] GUI functional testing (manual)
+- [ ] **Hardware Testing:**
+  - [ ] Basic CV functionality
+  - [ ] Parameter range validation
+  - [ ] Data acquisition accuracy
+  - [ ] Long-term stability (1+ hour experiments)
+  - [ ] Edge cases (USB disconnect, invalid params, etc.)
+- [ ] **Unit Tests:**
+  - [ ] Parameter validation
+  - [ ] Data processing logic
+  - [ ] Configuration management
+- [ ] **Integration Tests:**
+  - [ ] Experiment lifecycle
+  - [ ] Serial communication
+  - [ ] Data export formats
+
+### 4.5 Packaging for Distribution 🔄 PLANNED
+- [ ] PyInstaller executable (Windows)
+- [ ] Application icon
+- [ ] Installer script
+- [ ] Dependency bundling
+- [ ] Cross-platform builds (Linux, macOS)
+
+**Deliverables:**
+- ✅ Error handling framework
+- ✅ Plot export
+- 🔄 User documentation (partial)
+- 🔄 Testing suite
+- 🔄 Packaged executable
+
+---
+
+## Phase 5: Advanced Features 🔄 IN PROGRESS
+
+**Duration:** Future releases | **Status:** 🔄 Phase 5.1 Complete (15%)
+
+### 5.1 Additional Experiment Techniques ✅ COMPLETE
+- [x] **Square Wave Voltammetry (SWV)** - Complete (357 lines)
+  - Forward/reverse current measurements
+  - Differential current calculation
+  - Sensitivity for trace analysis (sub-micromolar)
+  - Parameters: start, end, step_height, pulse_amplitude, frequency
+  - Command: `SWV:<start>:<end>:<step>:<pulse>:<freq>`
+
+- [x] **Differential Pulse Voltammetry (DPV)** - Complete (389 lines)
+  - Pulse waveform generation
+  - Baseline/pulse differential measurement
+  - Excellent sensitivity (nanomolar range)
+  - Parameters: start, end, step_height, pulse_amplitude, pulse_period, pulse_width
+  - Command: `DPV:<start>:<end>:<step>:<pulse>:<period>:<width>`
+
+- [x] **Normal Pulse Voltammetry (NPV)** - Complete (397 lines)
+  - Pulses from constant baseline potential
+  - Excellent discrimination against charging current
+  - Parameters: baseline_potential, start, end, step_height, pulse_period, pulse_width
+  - Command: `NPV:<baseline>:<start>:<end>:<step>:<period>:<width>`
+
+- [x] **Potentiometry (POT)** - Complete (267 lines)
+  - Open circuit potential monitoring
+  - Time-based voltage measurement
+  - Applications: pH, battery monitoring, corrosion
+  - Parameters: duration, sample_interval, offset_voltage
+  - Command: `POT:<duration>:<interval>`
+
+- [ ] **Chronocoulometry (CC)** - Future
+  - Charge integration over time
+
+### 5.2 Data Analysis Tools
+- [ ] **Peak Detection:**
+  - Automatic peak finding
+  - Peak annotation on plots
+  - Peak current and potential extraction
+
+- [ ] **Baseline Correction:**
+  - Polynomial fitting
+  - Spline interpolation
+  - Background subtraction
+
+- [ ] **Integration:**
+  - Charge calculation from current
+  - Area under curve
+  - Peak area analysis
+
+- [ ] **Smoothing Filters:**
+  - Savitzky-Golay filter
+  - Moving average
+  - Fourier transform filtering
+
+### 5.3 Method Builder
+- [ ] **Sequential Experiments:**
+  - Queue multiple experiments
+  - Run automatically in sequence
+  - Shared parameter inheritance
+
+- [ ] **Method Editor:**
+  - Drag-and-drop experiment sequence
+  - Parameter templates
+  - Conditional branching
+
+- [ ] **Batch Processing:**
+  - Multiple samples with same method
+  - Auto-increment sample names
+  - Summary report generation
+
+### 5.4 Database Integration (Optional)
+- [ ] SQLite database for experiment history
+- [ ] Search and filter past experiments
+- [ ] Experiment comparison tools
+- [ ] Export database to CSV/Excel
+
+### 5.5 Remote Control API (Optional)
+- [ ] REST API for programmatic control
+- [ ] Python API for scripting
+- [ ] Remote monitoring dashboard
+- [ ] Integration with lab automation systems
+
+### 5.6 Advanced Plotting
+- [ ] **Plot Overlays:**
+  - Compare multiple experiments on same axes
+  - Different line colors/styles
+  - Shared or independent scales
+
+- [ ] **Multi-Panel Layouts:**
   - Split view (2 plots)
   - Grid view (4+ plots)
-- [ ] **Data Cursors:** Show values at specific points
-- [ ] **Peak Detection:** Automatic peak finding and annotation
+  - Synchronized zooming/panning
 
-### 4.4 Configuration Management
-**Goal:** Persistent settings and easy experiment setup
+- [ ] **Data Cursors:**
+  - Show values at specific points
+  - Delta measurements between two cursors
+  - Export cursor data
 
-**Features:**
-- [ ] **Save/Load Experiment Parameters:**
-  - Save current settings as preset
-  - Load previous experiment configurations
-  - Default parameter sets
-- [ ] **User Preferences:**
-  - Default COM port
-  - Plot appearance settings
-  - Export format preferences
-  - Data save location
-- [ ] **Calibration Data Storage:**
-  - Offset current calibration
-  - TIA resistance values
-  - Reference voltage settings
-  - Device-specific calibrations
-- [ ] **Configuration File Format:** JSON-based for easy editing
+- [ ] **3D Plots:**
+  - Surface plots for multi-scan CV
+  - Contour plots for time-series data
 
----
+### 5.7 Calibration Features
+- [ ] **Calibration Dialog:**
+  - Guided calibration procedure
+  - Offset current determination
+  - TIA resistance measurement
+  - Reference voltage verification
 
-## Phase 5: Documentation & Testing
+- [ ] **Calibration History:**
+  - Track calibration over time
+  - Drift analysis
+  - Recalibration alerts
 
-### 5.1 Write Documentation
-**Goal:** Comprehensive user and developer documentation
-
-**User Documentation:**
-- [ ] `README.md` - Project overview, quick start
-- [ ] `docs/user_guide/installation.md` - Setup instructions
-- [ ] `docs/user_guide/getting_started.md` - First experiment tutorial
-- [ ] `docs/user_guide/experiments.md` - Guide for each experiment type
-- [ ] `docs/user_guide/troubleshooting.md` - Common issues and solutions
-- [ ] `docs/user_guide/calibration.md` - Calibration procedures
-
-**Developer Documentation:**
-- [ ] `docs/hardware/schematic_guide.md` - Hardware description
-- [ ] `docs/hardware/firmware_protocol.md` - Serial communication protocol
-- [ ] `docs/software/architecture.md` - Software architecture
-- [ ] `docs/software/api_reference.md` - Code API documentation
-- [ ] `docs/software/contributing.md` - Contribution guidelines
-
-**Media:**
-- [ ] Screenshots of GUI for each experiment type
-- [ ] Workflow diagrams
-- [ ] Example data plots
-
-### 5.2 Hardware Testing
-**Goal:** Validate software with prototype_v03 hardware
-
-**Test Cases:**
-- [ ] **Basic Functionality:**
-  - Serial connection/disconnection
-  - Parameter validation
-  - Command transmission
-  - Data reception
-- [ ] **Each Experiment Type:**
-  - Parameter range testing
-  - Data acquisition accuracy
-  - Plot update performance
-  - Error handling
-- [ ] **Long-term Stability:**
-  - Extended experiments (1+ hour)
-  - Multiple consecutive runs
-  - Memory leak testing
-- [ ] **Edge Cases:**
-  - USB disconnection during experiment
-  - Invalid parameter combinations
-  - Buffer overflow scenarios
-  - Rapid start/stop cycles
-
-**Test Documentation:**
-- [ ] Create test procedures
-- [ ] Record test results
-- [ ] Document known issues
+**Deliverables:**
+- ✅ Phase 5.1: 4 advanced experiment types (SWV, DPV, NPV, POT)
+- 🔄 Phase 5.2: Data analysis suite
+- 🔄 Phase 5.3: Method builder for automation
+- 🔄 Phase 5.4: Optional database integration
+- 🔄 Phase 5.5: Remote control API
+- 🔄 Phase 5.6: Enhanced plotting capabilities
+- 🔄 Phase 5.7: Calibration features
 
 ---
 
-## Phase 6: GitHub Deployment
+## Implementation Priorities
 
-### 6.1 Prepare for Public Release
-**Goal:** Clean and organize for open-source release
+### Must Have (v1.0 Release)
+1. ✅ Core GUI framework with Qt5
+2. ✅ Serial communication with prototype v03
+3. ✅ CV experiment fully functional
+4. ✅ Real-time plotting
+5. ✅ Data export (CSV, JSON)
+6. ✅ Configuration persistence
+7. 🔄 Hardware testing and validation
+8. 🔄 User documentation
 
-**Tasks:**
-- [ ] Review all code for sensitive information
-- [ ] Ensure private documentation is excluded
-- [ ] Add LICENSE file (choose appropriate: MIT, GPL, Apache)
-- [ ] Create comprehensive README with:
-  - Project description
-  - Features list
-  - Hardware requirements
-  - Installation instructions
-  - Quick start guide
-  - Screenshots
-  - Acknowledgments (DStat, references)
-- [ ] Add CONTRIBUTING.md guidelines
-- [ ] Create issue templates
-- [ ] Set up GitHub Actions (optional):
-  - Automated testing
-  - Build executables
-  - Documentation generation
+### Should Have (v1.1)
+1. ✅ LSV experiment
+2. ✅ CA experiment
+3. Excel export with openpyxl
+4. Autosave functionality
+5. Experiment parameter presets
+6. Progress indicators
+7. Unit test suite
+8. Packaged executable
 
-### 6.2 Push to GitHub
-**Goal:** Publish organized project
+### Nice to Have (v1.2+)
+1. ✅ SWV and DPV experiments
+2. ✅ NPV and POT experiments
+3. Peak detection
+4. Baseline correction
+5. Plot overlays
+6. Calibration dialog
+7. Method builder basics
 
-**Steps:**
-- [ ] Create GitHub repository
-- [ ] Add remote origin
-- [ ] Push main branch
-- [ ] Create release tags for versions
-- [ ] Set up GitHub Pages for documentation (optional)
-- [ ] Add topics/tags for discoverability:
-  - potentiostat
-  - electrochemistry
-  - cyclic-voltammetry
-  - open-hardware
-  - pyqt5
+### Future (v2.0+)
+1. Database integration
+2. Remote control API
+3. Advanced analysis tools
+4. 3D plotting
+5. Lab automation integration
 
 ---
 
-## Current Status
+## Technical Stack
 
-### What's Working:
-- ✓ Prototype v03 hardware manufactured and functional
-- ✓ Basic CV GUI working (`D:\2025_SaxStat\prototype_v03\GUI_V03`)
-- ✓ Serial communication with ESP32
-- ✓ Real-time plotting (V-t and I-V plots)
-- ✓ CSV data export
-- ✓ Offset current calibration
+### Current Implementation
+- **GUI Framework:** PyQt5
+- **Plotting:** pyqtgraph (real-time), matplotlib (optional)
+- **Data:** pandas DataFrames
+- **Serial:** pyserial with threading
+- **Config:** JSON with custom manager
+- **Export:** CSV, JSON, Excel (openpyxl)
 
-### What Needs Improvement:
-- ❌ Only supports Cyclic Voltammetry
-- ❌ Limited data export options
-- ❌ No experiment parameter save/load
-- ❌ Basic plotting features only
-- ❌ Project structure not organized for collaboration
-- ❌ Documentation incomplete
+### Considered Alternatives
+- **GUI:** PySide6, PyQt6 (future migration)
+- **Async:** asyncio + aioserial (considered, not needed yet)
+- **Validation:** pydantic (planned for parameter schemas)
+- **Testing:** pytest, pytest-qt (planned)
+- **Packaging:** PyInstaller, cx_Freeze
 
 ---
 
 ## Reference Resources
 
 ### DStat Project
-- **Main Site:** http://microfluidics.utoronto.ca/dstat
+- **Analysis Document:** `docs/software/DStat_Analysis.md` (1,066 lines)
 - **GitLab:** https://microfluidics.utoronto.ca/gitlab/dstat/dstat-interface
 - **GitHub Fork:** https://github.com/wheeler-microfluidics/dstat-interface-mrbox
-- **Publication:** Ainla et al., "DStat: A Versatile, Open-Source Potentiostat for Electroanalysis and Integration," PLOS ONE, 2015
+- **Publication:** Ainla et al., "DStat: A Versatile, Open-Source Potentiostat," PLOS ONE, 2015
 
-### Related Projects
-- **CheapStat:** Earlier open-source potentiostat
-- **PassStat:** Another open-source alternative
-- **PSoC-Stat:** PSoC-based potentiostat
+### SaxStat Documentation
+- **Architecture:** `docs/software/SaxStat_v1_Architecture.md` (782 lines)
+- **Development Log:** `DEV.md` (compact session summaries)
+- **Work Plan:** `WORK_PLAN.md` (this document)
+- **v1 README:** `software/saxstat_gui_v1/README.md`
 
 ### Technical References
 - Bard & Faulkner, "Electrochemical Methods"
-- Application notes on potentiostat design
-- PyQt5 documentation
-- Python serial communication guides
+- PyQt5 Documentation: https://www.riverbankcomputing.com/static/Docs/PyQt5/
+- pyqtgraph Documentation: https://pyqtgraph.readthedocs.io/
+- pandas Documentation: https://pandas.pydata.org/docs/
 
 ---
 
-## Timeline Estimate
+## Timeline Summary
 
-**Phase 1 (Organization):** 1-2 days
-**Phase 2 (DStat Analysis):** 2-3 days
-**Phase 3 (Architecture Design):** 2-3 days
-**Phase 4 (Implementation):** 2-3 weeks
-**Phase 5 (Documentation & Testing):** 1 week
-**Phase 6 (GitHub Deployment):** 1-2 days
+| Phase | Duration | Status | Completion |
+|-------|----------|--------|------------|
+| Phase 1: Core Architecture | Weeks 1-2 | ✅ Complete | 100% |
+| Phase 2: Experiment Support | Weeks 3-4 | ✅ Complete | 100% (CV, LSV, CA) |
+| Phase 3: Data Management | Weeks 5-6 | ✅ Complete | 100% |
+| Phase 4: Polish & Testing | Weeks 7-8 | 🔄 In Progress | 65% |
+| Phase 5: Advanced Features | Future | 🔄 In Progress | 15% (Phase 5.1 complete) |
 
-**Total Estimated Time:** 4-6 weeks
-
----
-
-## Next Steps
-
-1. Review and approve this work plan
-2. Begin Phase 1: Organize folder structure
-3. Initialize git repository
-4. Clone and study DStat project
-5. Design modular architecture
-6. Start implementing LSV as first new experiment type
+**Total Time Invested:** ~6.5 hours (rapid prototyping)
+**Estimated Remaining (v1.0):** 1 week (hardware testing, docs)
+**Estimated Total (v1.2):** 4-6 weeks from start (all 7 experiments)
 
 ---
 
-## Notes
+## Success Criteria
 
-- Keep `SaxStat_private docs/` excluded from public repository
-- Ensure firmware protocol is well-documented for hardware-software integration
-- Consider creating standalone executable with PyInstaller for end users
-- Plan for backward compatibility if protocol changes
-- Document hardware differences between prototype versions
+### v1.0 MVP Release
+- [ ] CV experiment tested and validated with hardware
+- [ ] Data export working reliably
+- [ ] Configuration persistence working
+- [ ] User documentation complete
+- [ ] No critical bugs
+- [ ] Ready for daily lab use
+
+### v1.1 Enhanced Release
+- [x] LSV and CA experiments functional
+- [ ] Excel export implemented
+- [ ] Autosave working
+- [ ] Unit tests passing
+- [ ] Standalone executable available
+
+### v1.2 Advanced Techniques Release
+- [x] 7 experiment types supported (CV, LSV, CA, SWV, DPV, NPV, POT)
+- [ ] All experiments tested with hardware
+- [ ] Comprehensive user documentation
+- [ ] Publication-ready examples
+
+### v2.0 Advanced Release
+- [ ] Data analysis tools functional
+- [ ] Method builder operational
+- [ ] Database integration
+- [ ] Remote control API
+- [ ] Used in multiple labs
 
 ---
 
+## Development Notes
+
+### Design Principles
+1. **Modularity:** Each component has single responsibility
+2. **Extensibility:** Easy to add new experiment types
+3. **Reliability:** Robust error handling and validation
+4. **Usability:** Clear UI with helpful feedback
+5. **Performance:** Real-time plotting without lag
+
+### Code Quality
+- Type hints throughout
+- Comprehensive docstrings
+- Clear module separation
+- Qt signals for loose coupling
+- Configuration-driven behavior
+
+### Testing Strategy
+- Unit tests for validation logic
+- Integration tests with mock hardware
+- GUI tests with pytest-qt
+- Hardware validation tests
+- Performance benchmarking
+
+---
+
+## Notes for Next Session
+
+**Immediate Priorities:**
+1. Test all 7 experiments with actual prototype v03 hardware
+2. Complete user documentation (installation, tutorials, troubleshooting)
+3. Add progress indicators for long experiments
+4. Write unit tests for parameter validation
+5. Begin Phase 5.2 (data analysis tools)
+
+**Known Issues:**
+- Excel export requires openpyxl (optional dependency)
+- Calibration dialog not yet implemented (placeholder)
+- Plot zoom/pan uses default pyqtgraph gestures (no custom controls)
+- Autosave framework ready but not activated
+
+**Future Considerations:**
+- Consider migrating to PyQt6/PySide6 for long-term support
+- Evaluate pydantic for parameter validation
+- Plan for database integration architecture
+- Design plugin system for custom experiments
+
+---
+
+**Document Version:** 2.1
 **Last Updated:** 2025-10-12
+**Status:** Phase 1-3 Complete, Phase 4 In Progress (65%), Phase 5.1 Complete (15% of Phase 5)
