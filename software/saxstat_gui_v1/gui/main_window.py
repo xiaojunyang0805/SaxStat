@@ -207,7 +207,7 @@ class MainWindow(QMainWindow):
         left_layout.addWidget(serial_group)
 
         # Parameter panel
-        self.param_panel = ParameterPanel()
+        self.param_panel = ParameterPanel(self.config)
         left_layout.addWidget(self.param_panel)
 
         # Control buttons

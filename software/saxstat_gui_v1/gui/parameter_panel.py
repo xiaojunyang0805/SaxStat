@@ -7,12 +7,13 @@ Dynamic parameter input panel that adapts to selected experiment type.
 from PyQt5.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QFormLayout,
     QLabel, QLineEdit, QSpinBox, QDoubleSpinBox, QPushButton,
-    QGroupBox, QMessageBox
+    QGroupBox, QMessageBox, QComboBox, QInputDialog
 )
 from PyQt5.QtCore import pyqtSignal
 from typing import Dict, Any, Optional
 
 from ..experiments import BaseExperiment
+from ..config.config_manager import ConfigManager
 
 
 class ParameterPanel(QWidget):
@@ -32,9 +33,10 @@ class ParameterPanel(QWidget):
 
     parameters_configured = pyqtSignal(dict)  # {parameter_name: value}
 
-    def __init__(self, parent=None):
+    def __init__(self, config_manager: ConfigManager = None, parent=None):
         super().__init__(parent)
 
+        self.config = config_manager
         self.experiment: Optional[BaseExperiment] = None
         self.input_widgets: Dict[str, QWidget] = {}
 
@@ -48,6 +50,26 @@ class ParameterPanel(QWidget):
         # Parameter group box
         self.param_group = QGroupBox("Experiment Parameters")
         param_group_layout = QVBoxLayout()
+
+        # Preset controls
+        preset_layout = QHBoxLayout()
+        preset_layout.addWidget(QLabel("Preset:"))
+
+        self.preset_combo = QComboBox()
+        self.preset_combo.currentTextChanged.connect(self._on_preset_selected)
+        preset_layout.addWidget(self.preset_combo)
+
+        self.save_preset_btn = QPushButton("Save")
+        self.save_preset_btn.clicked.connect(self._on_save_preset_clicked)
+        self.save_preset_btn.setEnabled(False)
+        preset_layout.addWidget(self.save_preset_btn)
+
+        self.delete_preset_btn = QPushButton("Delete")
+        self.delete_preset_btn.clicked.connect(self._on_delete_preset_clicked)
+        self.delete_preset_btn.setEnabled(False)
+        preset_layout.addWidget(self.delete_preset_btn)
+
+        param_group_layout.addLayout(preset_layout)
 
         # Form layout for parameters
         self.param_layout = QFormLayout()
@@ -77,6 +99,8 @@ class ParameterPanel(QWidget):
 
         if experiment is None:
             self.configure_btn.setEnabled(False)
+            self.save_preset_btn.setEnabled(False)
+            self.delete_preset_btn.setEnabled(False)
             return
 
         # Get parameter schema
@@ -97,6 +121,10 @@ class ParameterPanel(QWidget):
                 self.param_layout.addRow(label, widget)
 
         self.configure_btn.setEnabled(True)
+        self.save_preset_btn.setEnabled(True)
+
+        # Load presets for this experiment
+        self._load_presets()
 
     def _create_input_widget(self, param_name: str, param_def: Dict[str, Any]) -> Optional[QWidget]:
         """
@@ -201,3 +229,132 @@ class ParameterPanel(QWidget):
         """
         self.param_group.setEnabled(enabled)
         self.configure_btn.setEnabled(enabled and self.experiment is not None)
+
+    def set_parameters(self, parameters: Dict[str, Any]):
+        """
+        Set parameter values in the input widgets.
+
+        Args:
+            parameters: Dictionary of parameter_name -> value
+        """
+        for param_name, value in parameters.items():
+            if param_name in self.input_widgets:
+                widget = self.input_widgets[param_name]
+
+                if isinstance(widget, (QSpinBox, QDoubleSpinBox)):
+                    widget.setValue(value)
+                elif isinstance(widget, QLineEdit):
+                    widget.setText(str(value))
+
+    # Preset management
+
+    def _load_presets(self):
+        """Load presets for current experiment into combo box."""
+        if not self.config or not self.experiment:
+            return
+
+        # Get experiment name
+        exp_name = self.experiment.get_name()
+
+        # Clear combo box
+        self.preset_combo.blockSignals(True)
+        self.preset_combo.clear()
+
+        # Add default option
+        self.preset_combo.addItem("-- Select Preset --")
+
+        # Load presets from config
+        presets = self.config.get_presets(exp_name)
+        for preset_name in sorted(presets.keys()):
+            self.preset_combo.addItem(preset_name)
+
+        self.preset_combo.blockSignals(False)
+
+        # Enable/disable delete button
+        self.delete_preset_btn.setEnabled(False)
+
+    def _on_preset_selected(self, preset_name: str):
+        """Handle preset selection from combo box."""
+        if not self.config or not self.experiment:
+            return
+
+        if preset_name == "-- Select Preset --" or not preset_name:
+            self.delete_preset_btn.setEnabled(False)
+            return
+
+        # Load preset parameters
+        exp_name = self.experiment.get_name()
+        parameters = self.config.load_preset(exp_name, preset_name)
+
+        if parameters:
+            # Apply parameters to widgets
+            self.set_parameters(parameters)
+            self.delete_preset_btn.setEnabled(True)
+
+    def _on_save_preset_clicked(self):
+        """Handle save preset button click."""
+        if not self.config or not self.experiment:
+            return
+
+        # Get preset name from user
+        name, ok = QInputDialog.getText(
+            self,
+            "Save Preset",
+            "Enter preset name:",
+            QLineEdit.Normal,
+            ""
+        )
+
+        if ok and name:
+            # Get current parameters
+            parameters = self.get_parameters()
+
+            # Save preset
+            exp_name = self.experiment.get_name()
+            self.config.save_preset(exp_name, name, parameters)
+
+            # Reload presets
+            self._load_presets()
+
+            # Select the newly saved preset
+            index = self.preset_combo.findText(name)
+            if index >= 0:
+                self.preset_combo.setCurrentIndex(index)
+
+            QMessageBox.information(
+                self,
+                "Preset Saved",
+                f"Preset '{name}' saved successfully!"
+            )
+
+    def _on_delete_preset_clicked(self):
+        """Handle delete preset button click."""
+        if not self.config or not self.experiment:
+            return
+
+        preset_name = self.preset_combo.currentText()
+        if preset_name == "-- Select Preset --" or not preset_name:
+            return
+
+        # Confirm deletion
+        reply = QMessageBox.question(
+            self,
+            "Delete Preset",
+            f"Are you sure you want to delete preset '{preset_name}'?",
+            QMessageBox.Yes | QMessageBox.No,
+            QMessageBox.No
+        )
+
+        if reply == QMessageBox.Yes:
+            # Delete preset
+            exp_name = self.experiment.get_name()
+            self.config.delete_preset(exp_name, preset_name)
+
+            # Reload presets
+            self._load_presets()
+
+            QMessageBox.information(
+                self,
+                "Preset Deleted",
+                f"Preset '{preset_name}' deleted successfully!"
+            )

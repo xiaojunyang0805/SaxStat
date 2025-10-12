@@ -197,3 +197,85 @@ class ConfigManager:
         """Reset all configuration to default values."""
         self.config = self.DEFAULT_CONFIG.copy()
         self.save()
+
+    # Parameter Presets
+
+    def get_presets(self, experiment_name: str) -> Dict[str, Dict[str, Any]]:
+        """
+        Get all presets for an experiment type.
+
+        Args:
+            experiment_name: Name of experiment (CV, LSV, etc.)
+
+        Returns:
+            dict: Dictionary of preset_name -> parameters
+        """
+        if 'presets' not in self.config:
+            self.config['presets'] = {}
+
+        return self.config['presets'].get(experiment_name, {})
+
+    def save_preset(self, experiment_name: str, preset_name: str, parameters: Dict[str, Any]):
+        """
+        Save a parameter preset for an experiment.
+
+        Args:
+            experiment_name: Name of experiment (CV, LSV, etc.)
+            preset_name: Name for this preset
+            parameters: Parameter values to save
+        """
+        if 'presets' not in self.config:
+            self.config['presets'] = {}
+
+        if experiment_name not in self.config['presets']:
+            self.config['presets'][experiment_name] = {}
+
+        self.config['presets'][experiment_name][preset_name] = parameters.copy()
+        self.save()
+
+    def load_preset(self, experiment_name: str, preset_name: str) -> Optional[Dict[str, Any]]:
+        """
+        Load a parameter preset.
+
+        Args:
+            experiment_name: Name of experiment
+            preset_name: Name of preset
+
+        Returns:
+            dict: Parameter values, or None if preset doesn't exist
+        """
+        presets = self.get_presets(experiment_name)
+        return presets.get(preset_name)
+
+    def delete_preset(self, experiment_name: str, preset_name: str):
+        """
+        Delete a parameter preset.
+
+        Args:
+            experiment_name: Name of experiment
+            preset_name: Name of preset to delete
+        """
+        if 'presets' in self.config:
+            if experiment_name in self.config['presets']:
+                if preset_name in self.config['presets'][experiment_name]:
+                    del self.config['presets'][experiment_name][preset_name]
+                    self.save()
+
+    def rename_preset(self, experiment_name: str, old_name: str, new_name: str):
+        """
+        Rename a parameter preset.
+
+        Args:
+            experiment_name: Name of experiment
+            old_name: Current preset name
+            new_name: New preset name
+        """
+        if 'presets' in self.config:
+            if experiment_name in self.config['presets']:
+                if old_name in self.config['presets'][experiment_name]:
+                    # Copy to new name
+                    self.config['presets'][experiment_name][new_name] = \
+                        self.config['presets'][experiment_name][old_name]
+                    # Delete old name
+                    del self.config['presets'][experiment_name][old_name]
+                    self.save()
