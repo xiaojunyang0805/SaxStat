@@ -468,23 +468,27 @@ Run with: `python run.py` from saxstat_gui_v1/ directory
   - All plot titles now render consistently in Arial font
 - **Result:** All text in graph panels (titles, axis labels, tick numbers) now displays in Arial
 
-### Work Plan v2.3 Reorganization
-- **Decision:** Reorganize v1.1 and v1.2 scope for practical development flow
-- **v1.1 Focus (Polish & Essential Features):**
-  - Excel export, autosave, parameter presets
-  - Plot overlays, calibration dialog
-  - Package executable
-  - Goal: Production-ready tool for lab use
-- **v1.2 Focus (Advanced Analysis & Workflow):**
-  - Progress indicators, unit tests, method builder
-  - Hardware testing suite
-  - Comprehensive documentation
-  - Goal: Publication-ready with advanced features
+### Work Plan v2.4 Reorganization - Clear Version Picture
+- **Decision:** Move all completed features to v1.1 for accurate progress tracking
+- **v1.1 Status: 57% Complete (8/14 tasks done)**
+  - ✅ Complete: 7 experiments (CV, LSV, CA, SWV, DPV, NPV, POT)
+  - ✅ Complete: 4 analysis tools (peak detection, baseline, integration, smoothing)
+  - 🔄 Remaining: 6 tasks (autosave, presets, Excel, overlays, calibration, packaging)
+- **v1.2 Focus (Testing & Workflow):**
+  - 7 tasks: Progress indicators, unit tests, method builder
+  - Hardware validation, comprehensive docs, publication examples
+- **Priority Order for v1.1:**
+  1. Autosave (critical - data loss prevention)
+  2. Parameter presets (productivity)
+  3. Excel export (already have openpyxl)
+  4. Plot overlays (experiment comparison)
+  5. Calibration dialog (accuracy)
+  6. Package executable (distribution)
 - **Rationale:**
-  - v1.1 focuses on local, standalone features (no external dependencies)
-  - Advanced experiments (7 types) and analysis tools (4 tools) already complete
-  - Separates user-facing polish from internal testing/workflow tools
-- **Updated:** WORK_PLAN.md version 2.3
+  - Honest progress tracking: 57% of v1.1 already done!
+  - Clear remaining scope: 6 focused tasks
+  - Logical priority: Critical features first, packaging last
+- **Updated:** WORK_PLAN.md version 2.4
 
 ---
 
