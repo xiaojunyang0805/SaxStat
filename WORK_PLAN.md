@@ -399,25 +399,25 @@ This work plan outlines the complete development roadmap for SaxStat GUI v1, bas
 7. 🔄 Hardware testing and validation
 8. 🔄 User documentation
 
-### Should Have (v1.1)
+### Should Have (v1.1 - Polish & Essential Features)
 1. ✅ LSV experiment
 2. ✅ CA experiment
 3. Excel export with openpyxl
 4. Autosave functionality
 5. Experiment parameter presets
-6. Progress indicators
-7. Unit test suite
-8. Packaged executable
+6. Plot overlays (compare multiple experiments)
+7. Calibration dialog
+8. Package executable (PyInstaller)
 
-### Nice to Have (v1.2+)
+### Nice to Have (v1.2 - Advanced Analysis & Workflow)
 1. ✅ SWV and DPV experiments
 2. ✅ NPV and POT experiments
 3. ✅ Peak detection
 4. ✅ Baseline correction
 5. ✅ Integration/charge calculation
 6. ✅ Smoothing filters
-7. Plot overlays
-8. Calibration dialog
+7. Progress indicators
+8. Unit test suite
 9. Method builder basics
 
 ### Future (v2.0+)
@@ -496,15 +496,21 @@ This work plan outlines the complete development roadmap for SaxStat GUI v1, bas
 - [ ] No critical bugs
 - [ ] Ready for daily lab use
 
-### v1.1 Enhanced Release
+### v1.1 Enhanced Release (Polish & Essential Features)
 - [x] LSV and CA experiments functional
 - [ ] Excel export implemented
 - [ ] Autosave working
-- [ ] Unit tests passing
+- [ ] Experiment parameter presets
+- [ ] Plot overlays for experiment comparison
+- [ ] Calibration dialog
 - [ ] Standalone executable available
 
-### v1.2 Advanced Techniques Release
+### v1.2 Advanced Release (Analysis & Workflow)
 - [x] 7 experiment types supported (CV, LSV, CA, SWV, DPV, NPV, POT)
+- [x] Data analysis tools (peak detection, baseline, integration, smoothing)
+- [ ] Progress indicators
+- [ ] Unit test suite
+- [ ] Method builder basics
 - [ ] All experiments tested with hardware
 - [ ] Comprehensive user documentation
 - [ ] Publication-ready examples
@@ -545,12 +551,21 @@ This work plan outlines the complete development roadmap for SaxStat GUI v1, bas
 
 ## Notes for Next Session
 
-**Immediate Priorities:**
+**Immediate Priorities (v1.1):**
+1. Excel export implementation
+2. Autosave functionality
+3. Experiment parameter presets (save/load configurations)
+4. Plot overlays (compare multiple experiments)
+5. Calibration dialog
+6. Package executable with PyInstaller
+
+**Next Phase (v1.2):**
 1. Test all 7 experiments with actual prototype v03 hardware
 2. Test Phase 5.2 analysis tools with real experimental data
 3. Complete user documentation (installation, tutorials, troubleshooting)
 4. Add progress indicators for long experiments
 5. Write unit tests for parameter validation and analysis algorithms
+6. Method builder basics
 
 **Known Issues:**
 - Excel export requires openpyxl (optional dependency)
@@ -566,6 +581,11 @@ This work plan outlines the complete development roadmap for SaxStat GUI v1, bas
 
 ---
 
-**Document Version:** 2.2
+**Document Version:** 2.3
 **Last Updated:** 2025-10-12
 **Status:** Phase 1-3 Complete, Phase 4 In Progress (70%), Phase 5.1-5.2 Complete (30% of Phase 5)
+
+**Version Focus:**
+- **v1.0:** Core CV functionality (COMPLETE)
+- **v1.1:** Polish & Essential Features (IN PROGRESS - 6 tasks)
+- **v1.2:** Advanced Analysis & Workflow (COMPLETE - experiments/analysis done, testing/docs remain)

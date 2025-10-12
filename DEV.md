@@ -468,6 +468,24 @@ Run with: `python run.py` from saxstat_gui_v1/ directory
   - All plot titles now render consistently in Arial font
 - **Result:** All text in graph panels (titles, axis labels, tick numbers) now displays in Arial
 
+### Work Plan v2.3 Reorganization
+- **Decision:** Reorganize v1.1 and v1.2 scope for practical development flow
+- **v1.1 Focus (Polish & Essential Features):**
+  - Excel export, autosave, parameter presets
+  - Plot overlays, calibration dialog
+  - Package executable
+  - Goal: Production-ready tool for lab use
+- **v1.2 Focus (Advanced Analysis & Workflow):**
+  - Progress indicators, unit tests, method builder
+  - Hardware testing suite
+  - Comprehensive documentation
+  - Goal: Publication-ready with advanced features
+- **Rationale:**
+  - v1.1 focuses on local, standalone features (no external dependencies)
+  - Advanced experiments (7 types) and analysis tools (4 tools) already complete
+  - Separates user-facing polish from internal testing/workflow tools
+- **Updated:** WORK_PLAN.md version 2.3
+
 ---
 
 ## Next Session - Remaining Tasks
