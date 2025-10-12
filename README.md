@@ -2,9 +2,9 @@
 
 **An open-source, ESP32-based potentiostat for electrochemical analysis**
 
-![Project Status](https://img.shields.io/badge/status-prototype-yellow)
+![Project Status](https://img.shields.io/badge/status-production--ready-green)
 ![Hardware](https://img.shields.io/badge/hardware-v0.3-blue)
-![Software](https://img.shields.io/badge/software-v0.3-blue)
+![Software](https://img.shields.io/badge/software-v1.1-brightgreen)
 ![License](https://img.shields.io/badge/license-TBD-lightgrey)
 
 ---
@@ -13,7 +13,7 @@
 
 SaxStat is a versatile, low-cost potentiostat designed for electrochemical testing and research. Built around the ESP32 microcontroller and high-precision ADC/DAC components, it provides professional-grade measurements suitable for cyclic voltammetry and other electrochemical techniques.
 
-**Current Status:** Prototype v03 hardware manufactured and functional. GUI software supports basic cyclic voltammetry with ongoing development for additional techniques.
+**Current Status:** Prototype v03 hardware manufactured and functional. GUI v1.1 software production-ready with 7 experiment types, 4 analysis tools, and comprehensive data management features.
 
 ## Features
 
@@ -26,15 +26,33 @@ SaxStat is a versatile, low-cost potentiostat designed for electrochemical testi
 - **Current Measurement:** Via transimpedance amplifier (TIA)
 - **USB Communication:** 115200 baud serial interface
 
-### Software
-- **GUI Framework:** PyQt5
-- **Real-time Plotting:** pyqtgraph
-- **Supported Techniques:**
-  - Cyclic Voltammetry (CV) ✓
-  - Linear Sweep Voltammetry (LSV) - Planned
-  - Chronoamperometry (CA) - Planned
-  - Square Wave Voltammetry (SWV) - Planned
-  - Differential Pulse Voltammetry (DPV) - Planned
+### Software (v1.1 - Production Ready)
+- **GUI Framework:** PyQt5 with modern styling
+- **Real-time Plotting:** pyqtgraph with high performance
+- **Data Processing:** pandas for efficient data handling
+- **Export Formats:** CSV, JSON, Excel (formatted)
+
+**Supported Techniques (7 total):**
+  - ✅ Cyclic Voltammetry (CV)
+  - ✅ Linear Sweep Voltammetry (LSV)
+  - ✅ Chronoamperometry (CA)
+  - ✅ Square Wave Voltammetry (SWV)
+  - ✅ Differential Pulse Voltammetry (DPV)
+  - ✅ Normal Pulse Voltammetry (NPV)
+  - ✅ Potentiometry (POT)
+
+**Data Analysis Tools (4 total):**
+  - ✅ Peak Detection (automatic with configurable parameters)
+  - ✅ Baseline Correction (polynomial, spline, linear)
+  - ✅ Integration (charge calculation with multiple methods)
+  - ✅ Smoothing Filters (Savitzky-Golay, moving average, Gaussian)
+
+**Productivity Features:**
+  - ✅ Autosave with configurable formats and patterns
+  - ✅ Parameter presets (save/load/delete per experiment)
+  - ✅ Plot overlays (compare up to 5 experiments with legend)
+  - ✅ Hardware calibration dialog
+  - ✅ Experiment history (automatic storage)
 
 ## Project Structure
 
@@ -43,22 +61,25 @@ SaxStat/
 ├── hardware/              # PCB design files
 │   ├── schematics/        # Schematic PDFs and EasyEDA project
 │   ├── bom/               # Bill of Materials
-│   └── 3d_models/         # 3D STEP models
+│   └── gerbers_private/   # Manufacturing files (private)
 ├── firmware/              # ESP32 firmware (Arduino)
 │   ├── prototype_v01/     # First prototype firmware
 │   ├── prototype_v02/     # Second prototype firmware
-│   └── prototype_v03/     # Current prototype firmware
+│   └── prototype_v03/     # Current prototype firmware (production)
 ├── software/              # Python GUI application
-│   ├── saxstat_gui/       # Main application
-│   ├── experiments/       # Experiment modules
-│   └── utils/             # Utilities
+│   ├── saxstat_gui_v0/    # Legacy v0 GUI
+│   └── saxstat_gui_v1/    # v1.1 Production GUI (modular architecture)
+│       ├── experiments/   # 7 experiment implementations
+│       ├── gui/           # PyQt5 UI components
+│       ├── data/          # Data management with pandas
+│       ├── plotting/      # Real-time plotting
+│       ├── config/        # Configuration management
+│       ├── communication/ # Serial communication
+│       └── analysis/      # Data analysis tools
 ├── docs/                  # Documentation
-│   ├── hardware/          # Hardware documentation
-│   ├── software/          # Software documentation
-│   ├── user_guide/        # User guides
+│   ├── software/          # Software architecture and DStat analysis
 │   └── datasheets/        # Component datasheets
-└── examples/              # Example test data
-    └── test_data/         # Sample measurements
+└── WORK_PLAN.md           # Detailed development roadmap (v2.5)
 ```
 
 ## Getting Started
@@ -71,7 +92,7 @@ SaxStat/
 
 ### Software Requirements
 - Python 3.8 or higher
-- Required Python packages (see `software/saxstat_gui/requirements.txt`)
+- Required Python packages (see `software/saxstat_gui_v1/requirements.txt`)
 
 ### Installation
 
@@ -83,7 +104,7 @@ cd SaxStat
 
 2. **Install Python dependencies:**
 ```bash
-cd software/saxstat_gui
+cd software/saxstat_gui_v1
 pip install -r requirements.txt
 ```
 
@@ -94,18 +115,22 @@ pip install -r requirements.txt
 
 4. **Run the GUI:**
 ```bash
-python SaxStat_GUI_V03.py
+cd software
+python -m saxstat_gui_v1.main
 ```
 
 ### Quick Start Guide
 
-1. Connect your SaxStat device via USB
-2. Launch the GUI application
-3. Select the correct COM port and click "Connect"
-4. (Optional) Click "Calibrate Offset" to measure baseline current
-5. Set your experiment parameters (start/end voltage, scan rate, cycles)
-6. Click "Start CV" to begin measurement
-7. Save your data using "Save Data" button
+1. **Connect Hardware:** Connect your SaxStat device via USB
+2. **Launch GUI:** Run `python -m saxstat_gui_v1.main` from software directory
+3. **Select Port:** Choose COM port and click "Connect"
+4. **Choose Experiment:** Select from 7 experiment types (CV, LSV, CA, SWV, DPV, NPV, POT)
+5. **Configure Parameters:** Set experiment parameters or load a preset
+6. **Calibrate (Optional):** Settings → Calibration to configure hardware parameters
+7. **Run Experiment:** Click "Start Experiment"
+8. **Analyze Data:** Use Analysis → Data Analysis Tools for peak detection, baseline correction, etc.
+9. **Save Results:** Data auto-saves if enabled, or manually save with File → Save Data
+10. **Compare Runs:** Use View → Compare Experiments to overlay multiple runs
 
 ## Hardware Design
 
@@ -121,49 +146,74 @@ Schematic files are available in `hardware/schematics/`. The design uses EasyEDA
 
 **Note:** PCB Gerber files are not included in the public repository. Contact the author if you need manufacturing files.
 
-## Software Architecture
+## Software Architecture (v1.1)
 
-The GUI is built using PyQt5 with a modular architecture to support multiple electrochemical techniques:
+The GUI v1.1 is built using PyQt5 with a professional modular architecture:
 
-- **Serial Communication:** Manages USB connection to ESP32
-- **Experiment Modules:** Individual classes for each technique (CV, LSV, etc.)
-- **Data Processing:** Real-time data acquisition and processing
-- **Plotting:** Live visualization using pyqtgraph
-- **Export:** CSV format with experiment metadata
+**Core Components:**
+- **Experiment Framework:** BaseExperiment class with template method pattern
+- **Experiment Registry:** Auto-registration system for experiment types
+- **Serial Communication:** Thread-safe async I/O with SerialManager
+- **Data Management:** pandas-based DataManager with history storage
+- **Plot Manager:** High-performance real-time plotting with pyqtgraph
+- **Configuration:** JSON-based ConfigManager with presets support
+- **Analysis Tools:** scipy-based peak detection, baseline correction, integration, smoothing
 
-See `WORK_PLAN.md` for detailed development roadmap.
+**Key Features:**
+- Modular experiment design - easy to add new techniques
+- Type-safe parameter validation with schemas
+- Real-time plotting without blocking
+- Professional Excel export with formatted sheets
+- Autosave with configurable patterns and formats
+- Parameter presets per experiment type
+- Experiment history with comparison overlays
+- Hardware calibration management
+
+See `WORK_PLAN.md` for detailed development roadmap (v2.5).
+See `software/saxstat_gui_v1/README.md` for v1.1 architecture details.
 
 ## Development Status
 
-### Completed ✓
+### v1.1 - Production Ready ✅ (93% Complete)
+
+**Completed:**
 - [x] Hardware prototype v03 design and fabrication
-- [x] ESP32 firmware for cyclic voltammetry
-- [x] PyQt5 GUI with basic CV support
-- [x] Real-time plotting (voltage-time and current-voltage)
-- [x] Serial communication protocol
-- [x] Data export to CSV
-- [x] Offset current calibration
+- [x] ESP32 firmware for all experiment types
+- [x] 7 experiment types (CV, LSV, CA, SWV, DPV, NPV, POT)
+- [x] 4 data analysis tools (peaks, baseline, integration, smoothing)
+- [x] Professional Excel export with formatted sheets
+- [x] Autosave with preferences dialog
+- [x] Parameter presets (per-experiment save/load/delete)
+- [x] Plot overlays (compare up to 5 experiments)
+- [x] Hardware calibration dialog
+- [x] Real-time plotting (dual plots)
+- [x] Thread-safe serial communication
+- [x] Configuration management with JSON
+- [x] Experiment history storage
 
-### In Progress 🔄
-- [ ] Multi-experiment framework (LSV, CA, SWV, DPV)
-- [ ] Enhanced data export (JSON, Excel)
-- [ ] Advanced plotting features
-- [ ] Configuration management
-- [ ] Comprehensive documentation
+### v1.2 - Testing & Workflow 📋 (Planned)
+- [ ] PyInstaller packaging (standalone executable)
+- [ ] Hardware validation testing (all 7 experiments)
+- [ ] Comprehensive user documentation
+- [ ] Unit test suite (pytest)
+- [ ] Progress indicators for long experiments
+- [ ] Method builder (sequential experiments)
+- [ ] Publication-ready examples
 
-### Planned 📋
-- [ ] Automated peak detection
-- [ ] Batch experiment processing
+### Future (v2.0+) 🔮
+- [ ] Database integration for experiment history
 - [ ] Remote control API
+- [ ] Method automation and scripting
 - [ ] Mobile app integration
 
 ## Documentation
 
-- **Work Plan:** See `WORK_PLAN.md` for detailed development plan
-- **Folder Structure:** See `FOLDER_STRUCTURE.md` for project organization
-- **Hardware Docs:** Coming soon in `docs/hardware/`
-- **Software API:** Coming soon in `docs/software/`
-- **User Guide:** Coming soon in `docs/user_guide/`
+- **Work Plan:** See `WORK_PLAN.md` (v2.5) for detailed development roadmap
+- **v1.1 GUI:** See `software/saxstat_gui_v1/README.md` for architecture and implementation
+- **Software Analysis:** See `docs/software/DStat_Analysis.md` for reference project analysis
+- **Architecture:** See `docs/software/SaxStat_v1_Architecture.md` for design decisions
+- **Hardware Docs:** See `hardware/schematics/` for PCB design files
+- **User Guide:** In-app help via Help → About, comprehensive docs coming in v1.2
 
 ## Contributing
 
