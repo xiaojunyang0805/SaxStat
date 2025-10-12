@@ -277,26 +277,44 @@ This work plan outlines the complete development roadmap for SaxStat GUI v1, bas
 - [ ] **Chronocoulometry (CC)** - Future
   - Charge integration over time
 
-### 5.2 Data Analysis Tools
-- [ ] **Peak Detection:**
-  - Automatic peak finding
-  - Peak annotation on plots
+### 5.2 Data Analysis Tools ✅ COMPLETE
+- [x] **Peak Detection:**
+  - Automatic peak finding (scipy.signal.find_peaks)
+  - Peak annotation on plots (red/blue markers)
   - Peak current and potential extraction
+  - Configurable prominence, width, height, distance
+  - 196 lines implemented
 
-- [ ] **Baseline Correction:**
+- [x] **Baseline Correction:**
   - Polynomial fitting
   - Spline interpolation
+  - Linear baseline (endpoints or start/end segments)
   - Background subtraction
+  - Orange dashed line visualization overlay
+  - 197 lines implemented
 
-- [ ] **Integration:**
-  - Charge calculation from current
-  - Area under curve
-  - Peak area analysis
+- [x] **Integration:**
+  - Charge calculation from current (Q = ∫I dt)
+  - Trapezoidal and Simpson's rule
+  - Range-based integration
+  - Peak area calculation
+  - Cumulative charge tracking
+  - 173 lines implemented
 
-- [ ] **Smoothing Filters:**
-  - Savitzky-Golay filter
+- [x] **Smoothing Filters:**
+  - Savitzky-Golay filter (peak-preserving)
   - Moving average
-  - Fourier transform filtering
+  - Exponential moving average
+  - Gaussian smoothing
+  - Green line visualization overlay
+  - 186 lines implemented
+
+- [x] **Analysis Panel UI:**
+  - Method selection dropdowns
+  - Parameter controls
+  - Results text display
+  - Interactive visualization overlays
+  - 267 lines implemented
 
 ### 5.3 Method Builder
 - [ ] **Sequential Experiments:**
@@ -360,7 +378,7 @@ This work plan outlines the complete development roadmap for SaxStat GUI v1, bas
 
 **Deliverables:**
 - ✅ Phase 5.1: 4 advanced experiment types (SWV, DPV, NPV, POT)
-- 🔄 Phase 5.2: Data analysis suite
+- ✅ Phase 5.2: Data analysis suite (Peak Detection, Baseline Correction, Integration, Smoothing)
 - 🔄 Phase 5.3: Method builder for automation
 - 🔄 Phase 5.4: Optional database integration
 - 🔄 Phase 5.5: Remote control API
@@ -394,11 +412,13 @@ This work plan outlines the complete development roadmap for SaxStat GUI v1, bas
 ### Nice to Have (v1.2+)
 1. ✅ SWV and DPV experiments
 2. ✅ NPV and POT experiments
-3. Peak detection
-4. Baseline correction
-5. Plot overlays
-6. Calibration dialog
-7. Method builder basics
+3. ✅ Peak detection
+4. ✅ Baseline correction
+5. ✅ Integration/charge calculation
+6. ✅ Smoothing filters
+7. Plot overlays
+8. Calibration dialog
+9. Method builder basics
 
 ### Future (v2.0+)
 1. Database integration
@@ -457,12 +477,12 @@ This work plan outlines the complete development roadmap for SaxStat GUI v1, bas
 | Phase 1: Core Architecture | Weeks 1-2 | ✅ Complete | 100% |
 | Phase 2: Experiment Support | Weeks 3-4 | ✅ Complete | 100% (CV, LSV, CA) |
 | Phase 3: Data Management | Weeks 5-6 | ✅ Complete | 100% |
-| Phase 4: Polish & Testing | Weeks 7-8 | 🔄 In Progress | 65% |
-| Phase 5: Advanced Features | Future | 🔄 In Progress | 15% (Phase 5.1 complete) |
+| Phase 4: Polish & Testing | Weeks 7-8 | 🔄 In Progress | 70% |
+| Phase 5: Advanced Features | Future | 🔄 In Progress | 30% (5.1 & 5.2 complete) |
 
-**Total Time Invested:** ~6.5 hours (rapid prototyping)
+**Total Time Invested:** ~10 hours (rapid prototyping)
 **Estimated Remaining (v1.0):** 1 week (hardware testing, docs)
-**Estimated Total (v1.2):** 4-6 weeks from start (all 7 experiments)
+**Estimated Total (v1.2):** 4-6 weeks from start (all 7 experiments + 4 analysis tools)
 
 ---
 
@@ -490,7 +510,7 @@ This work plan outlines the complete development roadmap for SaxStat GUI v1, bas
 - [ ] Publication-ready examples
 
 ### v2.0 Advanced Release
-- [ ] Data analysis tools functional
+- [x] Data analysis tools functional (Phase 5.2 complete)
 - [ ] Method builder operational
 - [ ] Database integration
 - [ ] Remote control API
@@ -527,10 +547,10 @@ This work plan outlines the complete development roadmap for SaxStat GUI v1, bas
 
 **Immediate Priorities:**
 1. Test all 7 experiments with actual prototype v03 hardware
-2. Complete user documentation (installation, tutorials, troubleshooting)
-3. Add progress indicators for long experiments
-4. Write unit tests for parameter validation
-5. Begin Phase 5.2 (data analysis tools)
+2. Test Phase 5.2 analysis tools with real experimental data
+3. Complete user documentation (installation, tutorials, troubleshooting)
+4. Add progress indicators for long experiments
+5. Write unit tests for parameter validation and analysis algorithms
 
 **Known Issues:**
 - Excel export requires openpyxl (optional dependency)
@@ -546,6 +566,6 @@ This work plan outlines the complete development roadmap for SaxStat GUI v1, bas
 
 ---
 
-**Document Version:** 2.1
+**Document Version:** 2.2
 **Last Updated:** 2025-10-12
-**Status:** Phase 1-3 Complete, Phase 4 In Progress (65%), Phase 5.1 Complete (15% of Phase 5)
+**Status:** Phase 1-3 Complete, Phase 4 In Progress (70%), Phase 5.1-5.2 Complete (30% of Phase 5)

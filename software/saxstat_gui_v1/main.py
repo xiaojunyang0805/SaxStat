@@ -6,7 +6,7 @@ This module initializes and launches the SaxStat GUI application.
 
 import sys
 from PyQt5.QtWidgets import QApplication
-from gui.main_window import MainWindow
+from saxstat_gui_v1.gui.main_window import MainWindow
 
 
 def main():

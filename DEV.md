@@ -357,6 +357,92 @@ Run with: `python run.py` from saxstat_gui_v1/ directory
 
 ---
 
+## 2025-10-12 - Phase 5.2: Data Analysis Tools
+
+**Duration:** ~2 hours | **Status:** ✅ Complete
+
+### Completed
+- ✅ Created analysis module directory structure
+- ✅ Implemented Peak Detection algorithm (scipy-based, 196 lines)
+- ✅ Implemented Baseline Correction methods (197 lines)
+- ✅ Implemented Integration/Charge calculation (173 lines)
+- ✅ Implemented Smoothing filters (186 lines)
+- ✅ Created Analysis Panel UI widget (267 lines)
+- ✅ Integrated analysis tools with main window (visualization overlays)
+- ✅ Updated requirements.txt with numpy and scipy dependencies
+- ✅ Fixed main.py import paths for proper module execution
+- ✅ Successfully tested all analysis tools with GUI
+
+### Peak Detection Implementation
+- **Algorithm:** scipy.signal.find_peaks for automatic detection
+- **Features:** Configurable prominence, width, height, distance
+- **Visualization:** Red markers for anodic peaks, blue for cathodic peaks
+- **Output:** Peak positions, values, properties, peak separation
+- **Line count:** 196 lines
+
+### Baseline Correction Implementation
+- **Methods:** Polynomial, Spline, Linear, Endpoints
+- **Features:** Multiple fitting algorithms with configurable parameters
+- **Visualization:** Orange dashed line overlay for baseline
+- **Output:** Baseline curve and corrected data
+- **Line count:** 197 lines
+
+### Integration Implementation
+- **Methods:** Trapezoidal rule, Simpson's rule
+- **Features:** Range-based integration, cumulative charge, peak area
+- **Applications:** Charge calculation (Q = ∫I dt), coulometric analysis
+- **Output:** Total charge, average/peak current, statistics
+- **Line count:** 173 lines
+
+### Smoothing Implementation
+- **Methods:** Savitzky-Golay, Moving Average, Exponential MA, Gaussian
+- **Features:** Noise reduction with configurable parameters
+- **Visualization:** Green line overlay for smoothed data
+- **Output:** Smoothed data with noise reduction percentage
+- **Line count:** 186 lines
+
+### Analysis Panel UI
+- **Controls:** Method selection dropdowns, parameter spinboxes, action buttons
+- **Results Display:** Scrollable text area with detailed analysis results
+- **Integration:** Real-time data updates from main experiment window
+- **Visualization:** Interactive overlays on main plot (peaks, baseline, smoothing)
+- **Line count:** 267 lines
+
+### Key Features
+- **Auto-enable:** Analysis tools enable when sufficient data available (>10 points)
+- **Visual feedback:** Peak markers, baseline curves, smoothed overlays on plots
+- **Results persistence:** Text results accumulate until cleared
+- **Modular design:** Each analysis tool is independent and reusable
+- **Type hints:** Full typing support for all analysis functions
+
+### Architecture Notes
+- Analysis module: 4 independent tool classes (PeakDetector, BaselineCorrector, DataIntegrator, DataSmoother)
+- UI integration: AnalysisPanel emits signals processed by MainWindow
+- Visualization: PyQtGraph overlays (ScatterPlotItem for peaks, PlotCurve for baseline/smoothing)
+- Data flow: Experiment data → PlotManager → AnalysisPanel → Analysis tools → Visualization overlays
+- Clear workflow: New experiment start clears previous analysis overlays
+
+### Technical Fixes
+- **Import paths:** Fixed main.py to use saxstat_gui_v1.gui.main_window
+- **Dependencies:** Added numpy>=1.21.0 and scipy>=1.7.0 to requirements.txt
+- **GUI initialization:** Analysis panel integrated below control buttons in left panel
+
+### Stats
+- New files: 5 (peak_detection.py, baseline_correction.py, integration.py, smoothing.py, analysis_panel.py)
+- Modified files: 3 (main_window.py, requirements.txt, main.py)
+- Lines added: ~1,019 lines (752 analysis + 267 UI)
+- **Total analysis tools: 4** (Peak Detection, Baseline Correction, Integration, Smoothing)
+
+### Phase 5.2 Status
+- ✅ Peak Detection complete with visual markers
+- ✅ Baseline Correction complete with curve overlay
+- ✅ Integration complete with charge calculations
+- ✅ Smoothing complete with filtered data overlay
+- ✅ Analysis Panel UI complete with all controls
+- ✅ GUI integration complete with interactive visualizations
+
+---
+
 ## Next Session - Remaining Tasks
 
 **Per WORK_PLAN.md v2.0:**
@@ -379,9 +465,9 @@ Run with: `python run.py` from saxstat_gui_v1/ directory
 - [ ] Unit tests for validation
 - [ ] Package executable with PyInstaller
 
-### Phase 5: Advanced Features (In Progress - 15% Complete)
+### Phase 5: Advanced Features (In Progress - 30% Complete)
 - ✅ **Phase 5.1 Complete** - Additional experiment techniques (SWV, DPV, NPV, POT)
-- [ ] **Phase 5.2** - Data analysis tools (peak detection, baseline correction, integration, smoothing)
+- ✅ **Phase 5.2 Complete** - Data analysis tools (peak detection, baseline correction, integration, smoothing)
 - [ ] **Phase 5.3** - Method builder for sequential experiments
 - [ ] **Phase 5.4** - Database integration (optional)
 - [ ] **Phase 5.5** - Remote control API (optional)
@@ -402,7 +488,7 @@ Run with: `python run.py` from saxstat_gui_v1/ directory
 
 ## Session Summary (2025-10-12)
 
-**Total Duration:** ~8 hours | **WORK_PLAN v2.0 Status:** Phase 1 ✅ | Phase 2 ✅ | Phase 3 ✅ | Phase 4 🔄 (70%) | Phase 5 🔄 (15%)
+**Total Duration:** ~10 hours | **WORK_PLAN v2.0 Status:** Phase 1 ✅ | Phase 2 ✅ | Phase 3 ✅ | Phase 4 🔄 (70%) | Phase 5 🔄 (30%)
 
 ### Achievements Per WORK_PLAN v2.0
 - ✅ **Phase 1: Core Architecture** - Complete (100%)
@@ -436,25 +522,27 @@ Run with: `python run.py` from saxstat_gui_v1/ directory
   - 🔄 Testing suite (test script created)
   - 🔄 Packaging (planned)
 
-- 🔄 **Phase 5: Advanced Features** - In Progress (15%)
+- 🔄 **Phase 5: Advanced Features** - In Progress (30%)
   - ✅ **Phase 5.1 Complete** - Additional experiment techniques (SWV, DPV, NPV, POT)
-  - 🔄 Phase 5.2-5.7 planned
+  - ✅ **Phase 5.2 Complete** - Data analysis tools (Peak Detection, Baseline Correction, Integration, Smoothing)
+  - 🔄 Phase 5.3-5.7 planned
 
 ### Deliverables
 - **Documentation:** 3 major docs (DStat Analysis, Architecture, Work Plan v2.1) ~180KB
-- **Code:** 26 Python modules, ~4,200 lines functional GUI
+- **Code:** 31 Python modules, ~5,200 lines functional GUI
 - **Experiments:** 7 techniques (CV, LSV, CA, SWV, DPV, NPV, POT) with full parameter validation
-- **GUI Features:** Dual plots, modern styling, Arial typography, professional UX
-- **Dependencies:** requirements.txt with PyQt5, pyqtgraph, pandas, pyserial
+- **Analysis Tools:** 4 post-processing tools (Peak Detection, Baseline Correction, Integration, Smoothing)
+- **GUI Features:** Dual plots, modern styling, Arial typography, professional UX, interactive analysis overlays
+- **Dependencies:** requirements.txt with PyQt5, pyqtgraph, pandas, numpy, scipy, pyserial
 - **GitHub:** https://github.com/xiaojunyang0805/SaxStat
-- **Status:** Professional GUI v1 with 7 experiments, dual plot visualization, ready for hardware testing
+- **Status:** Professional GUI v1 with 7 experiments, 4 analysis tools, dual plot visualization, ready for hardware testing
 
 ### Current Completion
-- **MVP (v1.2) Progress:** ~92% (core + 7 experiments + UX done, hardware testing/docs remain)
+- **MVP (v1.2) Progress:** ~95% (core + 7 experiments + 4 analysis tools + UX done, hardware testing/docs remain)
 - **Phase 1:** Complete ✅
 - **Phase 2:** Complete ✅ (CV, LSV, CA all implemented)
 - **Phase 3:** Complete ✅
 - **Phase 4:** 70% (error handling ✅, GUI UX ✅, docs/testing pending)
-- **Phase 5:** 15% (Phase 5.1 complete, remaining phases planned)
+- **Phase 5:** 30% (Phase 5.1 ✅, Phase 5.2 ✅, remaining phases planned)
 
 **Last Updated:** 2025-10-12

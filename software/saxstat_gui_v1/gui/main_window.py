@@ -20,6 +20,7 @@ from ..data.data_manager import DataManager
 from ..plotting.plot_manager import PlotManager
 from ..config.config_manager import ConfigManager
 from .parameter_panel import ParameterPanel
+from .analysis_panel import AnalysisPanel
 
 
 class MainWindow(QMainWindow):
@@ -230,6 +231,11 @@ class MainWindow(QMainWindow):
         control_group.setLayout(control_layout)
         left_layout.addWidget(control_group)
 
+        # Analysis panel
+        self.analysis_panel = AnalysisPanel()
+        self.analysis_panel.analysis_applied.connect(self._on_analysis_applied)
+        left_layout.addWidget(self.analysis_panel)
+
         left_layout.addStretch()
 
         # Right panel - Dual plots (Applied Voltage + Main Data)
@@ -264,6 +270,10 @@ class MainWindow(QMainWindow):
         # Create plot managers
         self.plot_manager = PlotManager(self.plot_widget)
         self.voltage_plot_manager = PlotManager(self.voltage_time_widget)
+
+        # Analysis visualization items
+        self.peak_markers = []
+        self.baseline_curve = None
 
         # Add panels to main layout
         splitter = QSplitter(Qt.Horizontal)
@@ -467,6 +477,7 @@ class MainWindow(QMainWindow):
             self.data_manager.clear()
             self.plot_manager.clear()
             self.voltage_plot_manager.clear()
+            self._clear_analysis_overlays()
 
             # Start experiment
             command = self.current_experiment.start()
@@ -533,6 +544,14 @@ class MainWindow(QMainWindow):
 
         if x_key in data_point and y_key in data_point:
             self.plot_manager.add_point(data_point[x_key], data_point[y_key])
+
+        # Update analysis panel with latest data
+        if len(self.plot_manager.x_data) > 10:  # Wait for sufficient data
+            import numpy as np
+            self.analysis_panel.set_data(
+                np.array(self.plot_manager.x_data),
+                np.array(self.plot_manager.y_data)
+            )
 
     def _on_experiment_error(self, error: str):
         """Handle experiment error."""
@@ -611,6 +630,108 @@ class MainWindow(QMainWindow):
         <p>For more information, visit the project repository.</p>
         """
         QMessageBox.about(self, "About SaxStat", about_text)
+
+    def _on_analysis_applied(self, analysis_data: dict):
+        """Handle analysis result from analysis panel."""
+        analysis_type = analysis_data.get('type')
+
+        # Clear previous analysis overlays
+        self._clear_analysis_overlays()
+
+        if analysis_type == 'peak_detection':
+            # Visualize detected peaks
+            self._visualize_peaks(analysis_data)
+
+        elif analysis_type == 'baseline_correction':
+            # Visualize baseline
+            self._visualize_baseline(analysis_data)
+
+        elif analysis_type == 'smoothing':
+            # Update plot with smoothed data
+            self._visualize_smoothed(analysis_data)
+
+        # Integration doesn't need visualization (results shown in text)
+
+    def _clear_analysis_overlays(self):
+        """Clear all analysis visualization overlays."""
+        # Clear peak markers
+        for marker in self.peak_markers:
+            self.plot_widget.removeItem(marker)
+        self.peak_markers.clear()
+
+        # Clear baseline curve
+        if self.baseline_curve is not None:
+            self.plot_widget.removeItem(self.baseline_curve)
+            self.baseline_curve = None
+
+    def _visualize_peaks(self, analysis_data: dict):
+        """Visualize detected peaks on plot."""
+        import numpy as np
+
+        results = analysis_data.get('results', {})
+        x_data = np.array(self.plot_manager.x_data)
+        y_data = np.array(self.plot_manager.y_data)
+
+        # Anodic peaks (red markers)
+        anodic_peaks = results.get('anodic_peaks', [])
+        for peak_idx in anodic_peaks:
+            if peak_idx < len(x_data):
+                scatter = pg.ScatterPlotItem(
+                    [x_data[peak_idx]],
+                    [y_data[peak_idx]],
+                    symbol='o',
+                    size=12,
+                    pen=pg.mkPen('r', width=2),
+                    brush=pg.mkBrush(255, 0, 0, 100)
+                )
+                self.plot_widget.addItem(scatter)
+                self.peak_markers.append(scatter)
+
+        # Cathodic peaks (blue markers)
+        cathodic_peaks = results.get('cathodic_peaks', [])
+        for peak_idx in cathodic_peaks:
+            if peak_idx < len(x_data):
+                scatter = pg.ScatterPlotItem(
+                    [x_data[peak_idx]],
+                    [y_data[peak_idx]],
+                    symbol='o',
+                    size=12,
+                    pen=pg.mkPen('b', width=2),
+                    brush=pg.mkBrush(0, 0, 255, 100)
+                )
+                self.plot_widget.addItem(scatter)
+                self.peak_markers.append(scatter)
+
+    def _visualize_baseline(self, analysis_data: dict):
+        """Visualize baseline correction on plot."""
+        import numpy as np
+
+        baseline = analysis_data.get('baseline')
+        x_data = np.array(self.plot_manager.x_data)
+
+        if baseline is not None and len(baseline) == len(x_data):
+            # Add baseline curve (orange dashed line)
+            self.baseline_curve = self.plot_widget.plot(
+                x_data,
+                baseline,
+                pen=pg.mkPen(color='orange', width=2, style=Qt.DashLine)
+            )
+
+    def _visualize_smoothed(self, analysis_data: dict):
+        """Visualize smoothed data on plot."""
+        import numpy as np
+
+        smoothed_data = analysis_data.get('smoothed_data')
+        x_data = np.array(self.plot_manager.x_data)
+
+        if smoothed_data is not None and len(smoothed_data) == len(x_data):
+            # Add smoothed curve (green line)
+            smoothed_curve = self.plot_widget.plot(
+                x_data,
+                smoothed_data,
+                pen=pg.mkPen(color='green', width=2)
+            )
+            self.peak_markers.append(smoothed_curve)  # Store for clearing
 
     def closeEvent(self, event):
         """Handle window close event."""
