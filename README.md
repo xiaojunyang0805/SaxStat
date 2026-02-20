@@ -5,7 +5,7 @@
 ![Project Status](https://img.shields.io/badge/status-production--ready-green)
 ![Hardware](https://img.shields.io/badge/hardware-v0.3-blue)
 ![Software](https://img.shields.io/badge/software-v1.1-brightgreen)
-![License](https://img.shields.io/badge/license-TBD-lightgrey)
+![License](https://img.shields.io/badge/license-MIT-green)
 
 ---
 
@@ -182,12 +182,12 @@ The GUI v1.1 is built using PyQt5 with a professional modular architecture:
 - Experiment history with comparison overlays
 - Hardware calibration management
 
-See `WORK_PLAN.md` for detailed development roadmap (v2.5).
+See `WORK_PLAN.md` for detailed development roadmap (v2.6).
 See `software/saxstat_gui_v1/README.md` for v1.1 architecture details.
 
 ## Development Status
 
-### v1.1 - Production Ready ✅ (93% Complete)
+### v1.1 - Production Ready ✅ (Complete)
 
 **Completed:**
 - [x] Hardware prototype v03 design and fabrication
@@ -204,9 +204,9 @@ See `software/saxstat_gui_v1/README.md` for v1.1 architecture details.
 - [x] Thread-safe serial communication
 - [x] Configuration management with JSON
 - [x] Experiment history storage
+- [x] Standalone executable (`SaxStat.exe` via PyInstaller)
 
 ### v1.2 - Testing & Workflow 📋 (Planned)
-- [ ] PyInstaller packaging (standalone executable)
 - [ ] Hardware validation testing (all 7 experiments)
 - [ ] Comprehensive user documentation
 - [ ] Unit test suite (pytest)
@@ -258,7 +258,7 @@ This project was inspired by and references the following open-source potentiost
 
 ## License
 
-**To Be Determined** - License will be added soon. Currently for research and educational use only.
+This project is licensed under the [MIT License](LICENSE).
 
 ## Contact
 
