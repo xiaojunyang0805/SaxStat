@@ -525,6 +525,40 @@ Run with: `python run.py` from saxstat_gui_v1/ directory
 
 ---
 
+## 2026-02-20 - Gain Selection (10⁴ / 10⁶ V/A) Firmware & GUI
+
+**Duration:** ~1 hour | **Status:** ✅ Complete
+
+### Completed
+- ✅ Firmware: Added `#define GAIN1_PIN 33`, `GAIN2_PIN 25` with `pinMode`/`digitalWrite`
+- ✅ Firmware: Both MODE_ handlers (main loop + acquisition loop) now toggle GPIO pins
+- ✅ Firmware: Default on boot = LOW (10kΩ, ±500 µA)
+- ✅ GUI: Added "Gain Selection" QGroupBox with two QRadioButtons in left panel
+- ✅ GUI: Sends `MODE_0`/`MODE_1` via serial on toggle and on connect
+- ✅ GUI: Updates experiment `tia_resistance` (10000 or 1000000) dynamically
+- ✅ GUI: Persists gain selection in config across sessions
+- ✅ Base experiment: Added `set_tia_resistance()` method (inherited by all 6 experiments)
+- ✅ README: Documented gain selection in hardware specs, features, quick start
+- ✅ README: Fixed citation and GitHub Issues URL placeholder
+- ✅ Rebuilt `SaxStat.exe` with PyInstaller (includes gain selection)
+- ✅ Pushed to GitHub (commit ea86221)
+
+### Key Decisions
+- **Option A chosen:** Always calculate in µA — no unit switching between modes
+- **No changes to individual experiment files** — all inherit `set_tia_resistance()` from base
+- **Gain synced on every serial connect** — ensures hardware matches GUI state
+
+### Hardware Details
+- **Pin mapping:** GAIN1 → GPIO 33, GAIN2 → GPIO 25
+- **Switch IC:** TS5A3160 (U5, U6) — LOW = NC (10kΩ), HIGH = NO (1MΩ)
+- **U5 and U6 always switch together** (same gain for both channels)
+
+### Stats
+- Modified files: 4 (firmware .ino, base_experiment.py, main_window.py, README.md)
+- Lines: +104, -13
+
+---
+
 **Format Notes:**
 - Each session: Date, duration, status
 - Completed: Bullet list of tasks

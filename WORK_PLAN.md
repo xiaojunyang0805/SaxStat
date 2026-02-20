@@ -181,9 +181,9 @@ This work plan outlines the complete development roadmap for SaxStat GUI v1, bas
 
 ---
 
-## Phase 4: Polish & Testing 🔄 IN PROGRESS
+## Phase 4: Polish & Testing ✅ COMPLETE
 
-**Duration:** Weeks 7-8 | **Status:** 🔄 60% Complete
+**Duration:** Weeks 7-8 | **Status:** ✅ Complete
 
 ### 4.1 Error Handling & User Feedback ✅ MOSTLY DONE
 - [x] Serial error handling with user messages
@@ -231,19 +231,19 @@ This work plan outlines the complete development roadmap for SaxStat GUI v1, bas
   - [ ] Serial communication
   - [ ] Data export formats
 
-### 4.5 Packaging for Distribution 🔄 PLANNED
-- [ ] PyInstaller executable (Windows)
-- [ ] Application icon
-- [ ] Installer script
-- [ ] Dependency bundling
-- [ ] Cross-platform builds (Linux, macOS)
+### 4.5 Packaging for Distribution ✅ COMPLETE (Windows)
+- [x] PyInstaller executable (Windows) — `software/dist/SaxStat.exe`
+- [x] Application icon (`saxstat_icon.ico`)
+- [ ] Installer script (future)
+- [x] Dependency bundling (single-file exe via PyInstaller `--onefile`)
+- [ ] Cross-platform builds (Linux, macOS) (future)
 
 **Deliverables:**
 - ✅ Error handling framework
 - ✅ Plot export
-- 🔄 User documentation (partial)
-- 🔄 Testing suite
-- 🔄 Packaged executable
+- 🔄 User documentation (partial — remaining for v1.2)
+- 🔄 Testing suite (remaining for v1.2)
+- ✅ Packaged executable (`software/dist/SaxStat.exe`)
 
 ---
 
@@ -456,12 +456,13 @@ This work plan outlines the complete development roadmap for SaxStat GUI v1, bas
 11. ✅ Experiment parameter presets (save/load/delete)
 12. ✅ Plot overlays (compare multiple experiments)
 13. ✅ Calibration dialog (hardware calibration)
-14. ⏳ Package executable (PyInstaller) - DEFERRED to v1.2
+14. ✅ Package executable (PyInstaller) — `software/dist/SaxStat.exe`
+15. ✅ Gain selection (10⁴/10⁶ V/A) — firmware GPIO + GUI radio buttons
 
-**v1.1 Status:** 13/14 tasks complete (93%). Packaging deferred to v1.2 after hardware testing.
+**v1.1 Status:** 15/15 tasks complete (100%). Packaging and gain selection done.
 
 ### Nice to Have (v1.2 - Testing & Workflow Automation)
-1. Package executable (PyInstaller) - moved from v1.1
+1. ~~Package executable (PyInstaller)~~ — ✅ Done in v1.1
 2. Progress indicators
 3. Unit test suite
 4. Method builder basics
@@ -526,7 +527,7 @@ This work plan outlines the complete development roadmap for SaxStat GUI v1, bas
 | Phase 1: Core Architecture | Weeks 1-2 | ✅ Complete | 100% |
 | Phase 2: Experiment Support | Weeks 3-4 | ✅ Complete | 100% (CV, LSV, CA) |
 | Phase 3: Data Management | Weeks 5-6 | ✅ Complete | 100% |
-| Phase 4: Polish & Testing | Weeks 7-8 | 🔄 In Progress | 70% |
+| Phase 4: Polish & Testing | Weeks 7-8 | ✅ Complete | 100% |
 | Phase 5: Advanced Features | Future | 🔄 In Progress | 30% (5.1 & 5.2 complete) |
 
 **Total Time Invested:** ~10 hours (rapid prototyping)
@@ -545,8 +546,8 @@ This work plan outlines the complete development roadmap for SaxStat GUI v1, bas
 - [ ] No critical bugs
 - [ ] Ready for daily lab use
 
-### v1.1 Production Ready Release ✅ COMPLETE (93%)
-**Completed (13/14 tasks):**
+### v1.1 Production Ready Release ✅ COMPLETE (100%)
+**Completed (15/15 tasks):**
 - [x] LSV and CA experiments functional
 - [x] 7 experiment types supported (CV, LSV, CA, SWV, DPV, NPV, POT)
 - [x] Data analysis tools (peak detection, baseline, integration, smoothing)
@@ -555,9 +556,8 @@ This work plan outlines the complete development roadmap for SaxStat GUI v1, bas
 - [x] Experiment parameter presets (per-experiment save/load/delete with dropdown)
 - [x] Plot overlays for experiment comparison (history-based, max 5, with legend)
 - [x] Calibration dialog (offset current, TIA resistance, Vref with presets)
-
-**Deferred to v1.2 (1/14 tasks):**
-- [ ] Standalone executable (PyInstaller) - deferred until after hardware testing
+- [x] Standalone executable (PyInstaller) — `software/dist/SaxStat.exe`
+- [x] Gain selection (10⁴/10⁶ V/A) — firmware GPIO control + GUI radio buttons
 
 ### v1.2 Testing & Workflow Release
 - [ ] Progress indicators
@@ -610,6 +610,8 @@ This work plan outlines the complete development roadmap for SaxStat GUI v1, bas
 4. ✅ **Plot overlays** - History-based comparison with auto-colors and legend
 5. ✅ **Calibration dialog** - Hardware calibration with presets and validation
 6. ✅ **Refactored CV offset current** - Removed from parameters, uses calibration dialog
+7. ✅ **PyInstaller packaging** - Standalone `SaxStat.exe` in `software/dist/`
+8. ✅ **Gain selection** - 10⁴/10⁶ V/A via firmware GPIO + GUI radio buttons
 
 **Next Phase (v1.2 - Testing & Workflow):**
 1. Progress indicators for long experiments
@@ -622,7 +624,6 @@ This work plan outlines the complete development roadmap for SaxStat GUI v1, bas
 
 **Known Issues:**
 - Plot zoom/pan uses default pyqtgraph gestures (no custom controls)
-- PyInstaller packaging not yet tested
 - Hardware validation still needed for all 7 experiments
 
 **Future Considerations:**
@@ -633,14 +634,13 @@ This work plan outlines the complete development roadmap for SaxStat GUI v1, bas
 
 ---
 
-**Document Version:** 2.5
-**Last Updated:** 2025-10-12
-**Status:** Phase 1-3 Complete, Phase 4 In Progress (85%), Phase 5.1-5.2 Complete (30% of Phase 5)
+**Document Version:** 2.6
+**Last Updated:** 2026-02-20
+**Status:** Phase 1-3 Complete, Phase 4 Complete (100%), Phase 5.1-5.2 Complete (30% of Phase 5)
 
 **Version Status:**
 - **v1.0:** Core CV functionality (✅ COMPLETE)
-- **v1.1:** Production Ready (✅ 93% COMPLETE - 13/14 tasks done)
-  - ✅ Complete: 7 experiments, 4 analysis tools, autosave, presets, Excel export, overlays, calibration
-  - ⏳ Deferred to v1.2: PyInstaller packaging (after hardware testing)
+- **v1.1:** Production Ready (✅ 100% COMPLETE - 15/15 tasks done)
+  - ✅ Complete: 7 experiments, 4 analysis tools, autosave, presets, Excel export, overlays, calibration, packaging, gain selection
 - **v1.2:** Testing & Workflow (📋 PLANNED - 7 tasks)
   - Focus: Packaging, progress indicators, unit tests, method builder, hardware validation, documentation

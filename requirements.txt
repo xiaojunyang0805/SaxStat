@@ -1,23 +1,17 @@
-# SaxStat GUI v1 Requirements
+# SaxStat Requirements
+#
+# A standalone executable (SaxStat.exe) is available in software/dist/
+# and does not require Python or any dependencies.
+#
+# For development from source, use the detailed requirements file:
+#   pip install -r software/saxstat_gui_v1/requirements.txt
+#
+# Quick install (same packages):
 
-# GUI Framework
 PyQt5>=5.15.0
-
-# Real-time plotting
 pyqtgraph>=0.13.0
-
-# Data management
 pandas>=1.5.0
-
-# Scientific computing and analysis
 numpy>=1.21.0
 scipy>=1.7.0
-
-# Serial communication
 pyserial>=3.5
-
-# Optional: Excel export support
 openpyxl>=3.0.0
-
-# Optional: Additional plotting capabilities
-matplotlib>=3.5.0
