@@ -8,7 +8,8 @@ application state.
 from PyQt5.QtWidgets import (
     QMainWindow, QWidget, QVBoxLayout, QHBoxLayout, QSplitter,
     QMenuBar, QStatusBar, QAction, QComboBox, QPushButton,
-    QGroupBox, QLabel, QMessageBox, QFileDialog
+    QGroupBox, QLabel, QMessageBox, QFileDialog, QRadioButton,
+    QButtonGroup
 )
 from PyQt5.QtCore import pyqtSignal, QTimer, Qt
 from pathlib import Path
@@ -206,6 +207,24 @@ class MainWindow(QMainWindow):
         serial_group.setLayout(serial_layout)
         left_layout.addWidget(serial_group)
 
+        # Gain selection
+        self.current_gain_mode = 0  # 0 = 10kΩ (10⁴ V/A), 1 = 1MΩ (10⁶ V/A)
+        gain_group = QGroupBox("Gain Selection")
+        gain_layout = QVBoxLayout()
+
+        self.gain_button_group = QButtonGroup(self)
+        self.gain_10k_radio = QRadioButton("10\u2074 V/A (\u00b1500 \u00b5A)")
+        self.gain_1m_radio = QRadioButton("10\u2076 V/A (\u00b1100 nA)")
+        self.gain_10k_radio.setChecked(True)
+        self.gain_button_group.addButton(self.gain_10k_radio, 0)
+        self.gain_button_group.addButton(self.gain_1m_radio, 1)
+        self.gain_button_group.buttonClicked[int].connect(self._on_gain_changed)
+        gain_layout.addWidget(self.gain_10k_radio)
+        gain_layout.addWidget(self.gain_1m_radio)
+
+        gain_group.setLayout(gain_layout)
+        left_layout.addWidget(gain_group)
+
         # Parameter panel
         self.param_panel = ParameterPanel(self.config)
         left_layout.addWidget(self.param_panel)
@@ -371,6 +390,15 @@ class MainWindow(QMainWindow):
             if index >= 0:
                 self.port_combo.setCurrentIndex(index)
 
+        # Load gain selection
+        saved_gain = self.config.get('gain.mode', 0)
+        if saved_gain == 1:
+            self.gain_1m_radio.setChecked(True)
+            self.current_gain_mode = 1
+        else:
+            self.gain_10k_radio.setChecked(True)
+            self.current_gain_mode = 0
+
         # Load window geometry
         ui_config = self.config.get_ui_config()
         self.resize(ui_config.get('window_width', 1400),
@@ -415,6 +443,11 @@ class MainWindow(QMainWindow):
                 calibration = self.config.get_calibration()
                 self.current_experiment.load_calibration(calibration)
 
+            # Apply current gain setting
+            if hasattr(self.current_experiment, 'set_tia_resistance'):
+                resistance = 10000 if self.current_gain_mode == 0 else 1000000
+                self.current_experiment.set_tia_resistance(resistance)
+
             # Update parameter panel
             self.param_panel.set_experiment(self.current_experiment)
 
@@ -457,6 +490,10 @@ class MainWindow(QMainWindow):
         self.start_btn.setEnabled(self.current_experiment is not None)
         self.statusbar.showMessage(f"Connected to {self.port_combo.currentText()}")
 
+        # Sync gain mode with hardware
+        command = "MODE_0" if self.current_gain_mode == 0 else "MODE_1"
+        self.serial.send(command)
+
     def _on_serial_disconnected(self):
         """Handle serial disconnection."""
         self.connect_btn.setText("Connect")
@@ -474,6 +511,26 @@ class MainWindow(QMainWindow):
         """Handle serial communication error."""
         self.statusbar.showMessage(f"Serial error: {error}")
         QMessageBox.warning(self, "Serial Error", error)
+
+    def _on_gain_changed(self, button_id: int):
+        """Handle gain selection change."""
+        self.current_gain_mode = button_id
+        resistance = 10000 if button_id == 0 else 1000000
+        command = "MODE_0" if button_id == 0 else "MODE_1"
+
+        # Send command to hardware if connected
+        if self.serial.is_connected():
+            self.serial.send(command)
+
+        # Update current experiment's TIA resistance
+        if self.current_experiment and hasattr(self.current_experiment, 'set_tia_resistance'):
+            self.current_experiment.set_tia_resistance(resistance)
+
+        # Save to config
+        self.config.set('gain.mode', button_id)
+
+        label = "10\u2074 V/A (\u00b1500 \u00b5A)" if button_id == 0 else "10\u2076 V/A (\u00b1100 nA)"
+        self.statusbar.showMessage(f"Gain set to {label}")
 
     def _on_parameters_configured(self, params: dict):
         """Handle parameters configured from parameter panel."""

@@ -200,6 +200,10 @@ class BaseExperiment(QObject, metaclass=QABCMeta):
         """Return all collected data points."""
         return self.data_buffer.copy()
 
+    def set_tia_resistance(self, resistance: float):
+        """Set TIA feedback resistance for current calculation."""
+        self.tia_resistance = resistance
+
     def clear_data(self):
         """Clear the data buffer."""
         self.data_buffer.clear()

@@ -24,6 +24,9 @@ SaxStat is a versatile, low-cost potentiostat designed for electrochemical testi
 - **Power Supply:** USB-powered with ICL7660 bipolar supply
 - **Voltage Range:** -1.5V to +1.5V
 - **Current Measurement:** Via transimpedance amplifier (TIA)
+- **Gain Selection:** Two modes via TS5A3160 analog switches (GPIO 33/25)
+  - 10⁴ V/A (10kΩ TIA) — ±500 µA range
+  - 10⁶ V/A (1MΩ TIA) — ±100 nA range
 - **USB Communication:** 115200 baud serial interface
 
 ### Software (v1.1 - Production Ready)
@@ -52,6 +55,7 @@ SaxStat is a versatile, low-cost potentiostat designed for electrochemical testi
   - ✅ Parameter presets (save/load/delete per experiment)
   - ✅ Plot overlays (compare up to 5 experiments with legend)
   - ✅ Hardware calibration dialog
+  - ✅ Gain selection (10⁴/10⁶ V/A) with GUI toggle
   - ✅ Experiment history (automatic storage)
 
 ## Project Structure
@@ -126,11 +130,12 @@ python -m saxstat_gui_v1.main
 3. **Select Port:** Choose COM port and click "Connect"
 4. **Choose Experiment:** Select from 7 experiment types (CV, LSV, CA, SWV, DPV, NPV, POT)
 5. **Configure Parameters:** Set experiment parameters or load a preset
-6. **Calibrate (Optional):** Settings → Calibration to configure hardware parameters
-7. **Run Experiment:** Click "Start Experiment"
-8. **Analyze Data:** Use Analysis → Data Analysis Tools for peak detection, baseline correction, etc.
-9. **Save Results:** Data auto-saves if enabled, or manually save with File → Save Data
-10. **Compare Runs:** Use View → Compare Experiments to overlay multiple runs
+6. **Select Gain:** Choose 10⁴ V/A (±500 µA) or 10⁶ V/A (±100 nA) in the Gain Selection panel
+7. **Calibrate (Optional):** Settings → Calibration to configure hardware parameters
+8. **Run Experiment:** Click "Start Experiment"
+9. **Analyze Data:** Use Analysis → Data Analysis Tools for peak detection, baseline correction, etc.
+10. **Save Results:** Data auto-saves if enabled, or manually save with File → Save Data
+11. **Compare Runs:** Use View → Compare Experiments to overlay multiple runs
 
 ## Hardware Design
 
@@ -186,6 +191,7 @@ See `software/saxstat_gui_v1/README.md` for v1.1 architecture details.
 - [x] Parameter presets (per-experiment save/load/delete)
 - [x] Plot overlays (compare up to 5 experiments)
 - [x] Hardware calibration dialog
+- [x] Gain selection (10⁴/10⁶ V/A) with firmware GPIO control and GUI toggle
 - [x] Real-time plotting (dual plots)
 - [x] Thread-safe serial communication
 - [x] Configuration management with JSON
@@ -249,7 +255,7 @@ This project was inspired by and references the following open-source potentiost
 ## Contact
 
 For questions, issues, or collaboration inquiries:
-- **GitHub Issues:** [Create an issue](https://github.com/yourusername/SaxStat/issues)
+- **GitHub Issues:** [Create an issue](https://github.com/xiaojunyang0805/SaxStat/issues)
 - **Email:** xiaojunyang0805@gmail.com
 
 ## Citation
@@ -257,11 +263,12 @@ For questions, issues, or collaboration inquiries:
 If you use SaxStat in your research, please cite:
 
 ```
-[Citation format to be added]
+Yang, X. (2025). SaxStat: An Open-Source ESP32-Based Potentiostat for Electrochemical Analysis.
+GitHub repository: https://github.com/xiaojunyang0805/SaxStat
 ```
 
 ---
 
 **Disclaimer:** This is a research prototype. Users are responsible for validating measurements for their specific applications.
 
-**Last Updated:** 2025-10-12
+**Last Updated:** 2026-02-20

@@ -7,6 +7,9 @@
 #define CS_PIN 5    // AD5761 CS pin
 #define AD5761_CLOCK_RATE 10000000 // 10 MHz
 
+#define GAIN1_PIN 33
+#define GAIN2_PIN 25
+
 #define CMD_WR_CTRL_REG 0x4
 #define CMD_WR_UPDATE_DAC_REG 0x3
 #define CMD_SW_FULL_RESET 0xF
@@ -51,6 +54,12 @@ void setup() {
   spi.begin(SCK_PIN, -1, MOSI_PIN, CS_PIN);
   pinMode(CS_PIN, OUTPUT);
   digitalWrite(CS_PIN, HIGH);
+
+  // Gain selection pins (TS5A3160): LOW = 10kΩ (10⁴ V/A), HIGH = 1MΩ (10⁶ V/A)
+  pinMode(GAIN1_PIN, OUTPUT);
+  pinMode(GAIN2_PIN, OUTPUT);
+  digitalWrite(GAIN1_PIN, LOW);  // Default: 10kΩ
+  digitalWrite(GAIN2_PIN, LOW);
   ad5761_write(CMD_SW_FULL_RESET, 0x0000);
   delay(10);
   ad5761_write(CMD_WR_CTRL_REG, CONTROL_REG_MINUS3_TO_PLUS3);
@@ -181,8 +190,15 @@ void loop() {
           Serial.println("ADC:ERROR");
         }
       } else if (command.startsWith("MODE_")) {
-        if (command == "MODE_0") currentMode = 0; // ±500 µA (10 kΩ)
-        else if (command == "MODE_1") currentMode = 1; // ±100 nA (1 MΩ)
+        if (command == "MODE_0") {
+          currentMode = 0; // ±500 µA (10 kΩ)
+          digitalWrite(GAIN1_PIN, LOW);
+          digitalWrite(GAIN2_PIN, LOW);
+        } else if (command == "MODE_1") {
+          currentMode = 1; // ±100 nA (1 MΩ)
+          digitalWrite(GAIN1_PIN, HIGH);
+          digitalWrite(GAIN2_PIN, HIGH);
+        }
         Serial.print("Switched to mode: ");
         Serial.println(currentMode);
       } else if (command == "RESET_GPIO34:0") {
@@ -260,8 +276,15 @@ void loop() {
               Serial.println("ADC:ERROR");
             }
           } else if (command.startsWith("MODE_")) {
-            if (command == "MODE_0") currentMode = 0; // ±500 µA (10 kΩ)
-            else if (command == "MODE_1") currentMode = 1; // ±100 nA (1 MΩ)
+            if (command == "MODE_0") {
+              currentMode = 0; // ±500 µA (10 kΩ)
+              digitalWrite(GAIN1_PIN, LOW);
+              digitalWrite(GAIN2_PIN, LOW);
+            } else if (command == "MODE_1") {
+              currentMode = 1; // ±100 nA (1 MΩ)
+              digitalWrite(GAIN1_PIN, HIGH);
+              digitalWrite(GAIN2_PIN, HIGH);
+            }
             Serial.print("Switched to mode: ");
             Serial.println(currentMode);
           } else if (command == "RESET_GPIO34:0") {
