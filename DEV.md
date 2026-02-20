@@ -618,14 +618,14 @@ Run with: `python run.py` from saxstat_gui_v1/ directory
 - **GUI Features:** Dual plots, modern styling, Arial typography, professional UX, interactive analysis overlays
 - **Dependencies:** requirements.txt with PyQt5, pyqtgraph, pandas, numpy, scipy, pyserial
 - **GitHub:** https://github.com/xiaojunyang0805/SaxStat
-- **Status:** Professional GUI v1 with 7 experiments, 4 analysis tools, dual plot visualization, ready for hardware testing
+- **Status:** Production-ready GUI v1.1 with 7 experiments, 4 analysis tools, gain selection, standalone exe
 
 ### Current Completion
-- **MVP (v1.2) Progress:** ~95% (core + 7 experiments + 4 analysis tools + UX done, hardware testing/docs remain)
+- **v1.1 Status:** 100% (15/15 tasks complete)
 - **Phase 1:** Complete ✅
 - **Phase 2:** Complete ✅ (CV, LSV, CA all implemented)
 - **Phase 3:** Complete ✅
-- **Phase 4:** 70% (error handling ✅, GUI UX ✅, docs/testing pending)
+- **Phase 4:** Complete ✅ (packaging done, gain selection done)
 - **Phase 5:** 30% (Phase 5.1 ✅, Phase 5.2 ✅, remaining phases planned)
 
-**Last Updated:** 2025-10-12
+**Last Updated:** 2026-02-20
