@@ -95,14 +95,25 @@ SaxStat/
 - Electrochemical cell and electrodes
 
 ### Software Requirements
-- Python 3.8 or higher
-- Required Python packages (see `software/saxstat_gui_v1/requirements.txt`)
+- **Option A (Recommended):** Use the standalone executable — no Python needed
+- **Option B (Development):** Python 3.8+ with packages from `software/saxstat_gui_v1/requirements.txt`
 
 ### Installation
 
+#### Option A: Standalone Executable (Recommended)
+
+1. **Download** `SaxStat.exe` from `software/dist/` (or the [Releases](https://github.com/xiaojunyang0805/SaxStat/releases) page)
+2. **Upload firmware to ESP32:**
+   - Open `firmware/prototype_v03/SaxStat_V03_GUI_Test_02/SaxStat_V03_GUI_Test_02.ino` in Arduino IDE
+   - Select ESP32 Dev Module as board
+   - Upload to your ESP32
+3. **Run** `SaxStat.exe` — no installation required
+
+#### Option B: Run from Source
+
 1. **Clone the repository:**
 ```bash
-git clone https://github.com/yourusername/SaxStat.git
+git clone https://github.com/xiaojunyang0805/SaxStat.git
 cd SaxStat
 ```
 
@@ -112,10 +123,7 @@ cd software/saxstat_gui_v1
 pip install -r requirements.txt
 ```
 
-3. **Upload firmware to ESP32:**
-   - Open `firmware/prototype_v03/SaxStat_V03_GUI_Test/SaxStat_V03_GUI_Test.ino` in Arduino IDE
-   - Select ESP32 Dev Module as board
-   - Upload to your ESP32
+3. **Upload firmware to ESP32:** (same as Option A step 2)
 
 4. **Run the GUI:**
 ```bash
