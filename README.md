@@ -4,7 +4,7 @@
 
 ![Project Status](https://img.shields.io/badge/status-production--ready-green)
 ![Hardware](https://img.shields.io/badge/hardware-v0.3-blue)
-![Software](https://img.shields.io/badge/software-v1.1-brightgreen)
+![Software](https://img.shields.io/badge/software-v1.2-brightgreen)
 ![License](https://img.shields.io/badge/license-MIT-green)
 
 ---
@@ -13,7 +13,7 @@
 
 SaxStat is a versatile, low-cost potentiostat designed for electrochemical testing and research. Built around the ESP32 microcontroller and high-precision ADC/DAC components, it provides professional-grade measurements suitable for cyclic voltammetry and other electrochemical techniques.
 
-**Current Status:** Prototype v03 hardware manufactured and functional. GUI v1.1 software production-ready with 7 experiment types, 4 analysis tools, and comprehensive data management features.
+**Current Status:** Prototype v03 hardware manufactured and functional. GUI v1.2 software production-ready with 7 experiment types, 4 analysis tools, and comprehensive data management features.
 
 ## Features
 
@@ -29,7 +29,7 @@ SaxStat is a versatile, low-cost potentiostat designed for electrochemical testi
   - 10⁶ V/A (1MΩ TIA) — ±100 nA range
 - **USB Communication:** 115200 baud serial interface
 
-### Software (v1.1 - Production Ready)
+### Software (v1.2 - Production Ready)
 - **GUI Framework:** PyQt5 with modern styling
 - **Real-time Plotting:** pyqtgraph with high performance
 - **Data Processing:** pandas for efficient data handling
@@ -72,7 +72,7 @@ SaxStat/
 │   └── prototype_v03/     # Current prototype firmware (production)
 ├── software/              # Python GUI application
 │   ├── saxstat_gui_v0/    # Legacy v0 GUI
-│   └── saxstat_gui_v1/    # v1.1 Production GUI (modular architecture)
+│   └── saxstat_gui_v1/    # v1.2 Production GUI (modular architecture)
 │       ├── experiments/   # 7 experiment implementations
 │       ├── gui/           # PyQt5 UI components
 │       ├── data/          # Data management with pandas
@@ -159,9 +159,9 @@ Schematic files are available in `hardware/schematics/`. The design uses EasyEDA
 
 **Note:** PCB Gerber files are not included in the public repository. Contact the author if you need manufacturing files.
 
-## Software Architecture (v1.1)
+## Software Architecture (v1.2)
 
-The GUI v1.1 is built using PyQt5 with a professional modular architecture:
+The GUI v1.2 is built using PyQt5 with a professional modular architecture:
 
 **Core Components:**
 - **Experiment Framework:** BaseExperiment class with template method pattern
@@ -183,11 +183,11 @@ The GUI v1.1 is built using PyQt5 with a professional modular architecture:
 - Hardware calibration management
 
 See `WORK_PLAN.md` for detailed development roadmap (v2.6).
-See `software/saxstat_gui_v1/README.md` for v1.1 architecture details.
+See `software/saxstat_gui_v1/README.md` for v1.2 architecture details.
 
 ## Development Status
 
-### v1.1 - Production Ready ✅ (Complete)
+### v1.2 - Production Ready ✅ (Complete)
 
 **Completed:**
 - [x] Hardware prototype v03 design and fabrication
@@ -223,7 +223,7 @@ See `software/saxstat_gui_v1/README.md` for v1.1 architecture details.
 ## Documentation
 
 - **Work Plan:** See `WORK_PLAN.md` (v2.5) for detailed development roadmap
-- **v1.1 GUI:** See `software/saxstat_gui_v1/README.md` for architecture and implementation
+- **v1.2 GUI:** See `software/saxstat_gui_v1/README.md` for architecture and implementation
 - **Software Analysis:** See `docs/software/DStat_Analysis.md` for reference project analysis
 - **Architecture:** See `docs/software/SaxStat_v1_Architecture.md` for design decisions
 - **Hardware Docs:** See `hardware/schematics/` for PCB design files

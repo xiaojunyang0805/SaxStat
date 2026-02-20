@@ -1,15 +1,16 @@
-# SaxStat GUI v1.1 - Production Ready
+# SaxStat GUI v1.2 - Production Ready
 
 Modern PyQt5-based GUI for the SaxStat portable potentiostat with comprehensive experiment support and analysis tools.
 
 ## Status
-✅ **Production Ready (v1.1)** - 93% complete with 7 experiments, 4 analysis tools, ready for laboratory use
+✅ **Production Ready (v1.2)** - Complete with 7 experiments, 4 analysis tools, gain selection, standalone executable
 
 ## Features
 
 **Core Capabilities:**
 - **7 Experiment Types:** CV, LSV, CA, SWV, DPV, NPV, POT - all production-ready
 - **4 Analysis Tools:** Peak detection, baseline correction, integration, smoothing
+- **Gain Selection:** 10⁴ V/A (±500 µA) / 10⁶ V/A (±100 nA) via GUI radio buttons
 - **Real-time Plotting:** Dual plots with high-performance pyqtgraph
 - **Professional Data Export:** CSV, JSON, Excel with formatted multi-sheet output
 - **Autosave System:** Configurable automatic data saving with preferences dialog
@@ -17,6 +18,7 @@ Modern PyQt5-based GUI for the SaxStat portable potentiostat with comprehensive 
 - **Plot Overlays:** Compare up to 5 experiments with legend support
 - **Hardware Calibration:** Offset current, TIA resistance, Vref configuration
 - **Experiment History:** Automatic storage of last 50 runs for comparison
+- **Standalone Executable:** `SaxStat.exe` via PyInstaller (no Python required)
 
 **Architecture:**
 - **Modular Design:** Clean separation with template method pattern
@@ -67,15 +69,16 @@ python -m saxstat_gui_v1.main
 
 1. **Select Experiment:** Choose from 7 experiment types in dropdown
 2. **Connect Hardware:** Select serial port and click "Connect"
-3. **Load Preset (Optional):** Select saved parameter preset from dropdown
-4. **Configure Parameters:** Adjust experiment parameters or use defaults
-5. **Calibrate (Optional):** Settings → Calibration for hardware parameters
-6. **Configure Experiment:** Click "Configure Experiment" to validate parameters
-7. **Start Experiment:** Click "Start Experiment" to begin acquisition
-8. **View Real-time Data:** Dual plots show voltage vs time and current vs voltage
-9. **Analyze Data:** Analysis → Data Analysis Tools for peak detection, baseline correction, etc.
-10. **Compare Runs:** View → Compare Experiments to overlay multiple runs
-11. **Save Results:** Data auto-saves if enabled, or manually save with File → Save Data
+3. **Select Gain:** Choose 10⁴ V/A (±500 µA) or 10⁶ V/A (±100 nA)
+4. **Load Preset (Optional):** Select saved parameter preset from dropdown
+5. **Configure Parameters:** Adjust experiment parameters or use defaults
+6. **Calibrate (Optional):** Settings → Calibration for hardware parameters
+7. **Configure Experiment:** Click "Configure Experiment" to validate parameters
+8. **Start Experiment:** Click "Start Experiment" to begin acquisition
+9. **View Real-time Data:** Dual plots show voltage vs time and current vs voltage
+10. **Analyze Data:** Analysis → Data Analysis Tools for peak detection, baseline correction, etc.
+11. **Compare Runs:** View → Compare Experiments to overlay multiple runs
+12. **Save Results:** Data auto-saves if enabled, or manually save with File → Save Data
 
 **Menu Features:**
 - **File:** Save Data (Ctrl+S), Save Plot, Exit (Ctrl+Q)
@@ -129,6 +132,7 @@ Compatible with prototype_v03 firmware:
 - `START:<start_v>:<end_v>:<scan_rate>:<cycles>` - Start CV experiment
 - `STOP` - Stop current experiment
 - `CALIBRATE` - Run calibration routine
+- `MODE_0` / `MODE_1` - Switch gain (10kΩ / 1MΩ TIA)
 
 **Data Format:**
 - ADC values: 0-32767 (ADS1115 16-bit)
@@ -138,7 +142,8 @@ Compatible with prototype_v03 firmware:
 - Voltage range: -1.5V to +1.5V
 - DAC: AD5761 (16-bit)
 - ADC: ADS1115 (16-bit)
-- TIA: 10kΩ resistor
+- TIA: 10kΩ (MODE_0) or 1MΩ (MODE_1)
+- Gain switches: TS5A3160 on GPIO 33/25
 - Reference: 1.0V
 
 ## Configuration
@@ -149,6 +154,7 @@ Configuration stored in `~/.saxstat/config.json`:
 - UI preferences (window size, theme)
 - Experiment defaults (autosave, save directory)
 - Calibration values (offset current, TIA resistance, Vref)
+- Gain selection (mode 0 or 1)
 
 ## Adding New Experiments
 
@@ -168,11 +174,12 @@ See `cyclic_voltammetry.py` for complete example.
 
 ## Development Status
 
-**v1.1 - Production Ready** - ✅ 93% Complete
+**v1.2 - Production Ready** - ✅ Complete
 
 **Completed Features:**
 - ✅ 7 experiment types (CV, LSV, CA, SWV, DPV, NPV, POT)
 - ✅ 4 data analysis tools (peaks, baseline, integration, smoothing)
+- ✅ Gain selection (10⁴/10⁶ V/A) with firmware GPIO control
 - ✅ Professional Excel export (3-sheet formatted)
 - ✅ Autosave with preferences dialog
 - ✅ Parameter presets (per-experiment save/load/delete)
@@ -183,9 +190,9 @@ See `cyclic_voltammetry.py` for complete example.
 - ✅ Thread-safe serial communication
 - ✅ Configuration management with JSON
 - ✅ Modern UI with Arial font styling
+- ✅ Standalone executable (PyInstaller)
 
-**Deferred to v1.2:**
-- ⏳ PyInstaller packaging (after hardware testing)
+**Next (v1.3):**
 - ⏳ Hardware validation testing (all 7 experiments)
 - ⏳ Comprehensive user documentation
 - ⏳ Unit test suite
@@ -221,7 +228,6 @@ To test with hardware:
 ## Known Issues
 
 - Plot zoom/pan controls use default pyqtgraph mouse gestures
-- PyInstaller packaging not yet tested
 - Hardware validation needed for all 7 experiments
 
 ## References
@@ -231,4 +237,4 @@ To test with hardware:
 - **Architecture Doc:** `../../docs/software/SaxStat_v1_Architecture.md` - Design document
 - **Firmware Protocol:** Based on prototype_v03 firmware
 
-**Created:** 2025-10-12 | **Version:** 1.1 | **Status:** Production Ready (93% complete)
+**Created:** 2025-10-12 | **Version:** 1.2 | **Status:** Production Ready (100% complete)
