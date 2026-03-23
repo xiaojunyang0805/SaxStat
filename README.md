@@ -2,10 +2,12 @@
 
 **An open-source, ESP32-based potentiostat for electrochemical analysis**
 
-![Project Status](https://img.shields.io/badge/status-production--ready-green)
+![Project Status](https://img.shields.io/badge/status-concluded-orange)
 ![Hardware](https://img.shields.io/badge/hardware-v0.3-blue)
 ![Software](https://img.shields.io/badge/software-v1.2-brightgreen)
 ![License](https://img.shields.io/badge/license-MIT-green)
+
+> **Project Status:** This project has been concluded as a principle-exploration hobby project. The hardware has a known negative-voltage limitation (see [Known Limitation](#known-limitation)) that would require a PCB redesign to resolve. The software (GUI v1.2) and firmware (v03) are functional within the documented voltage range.
 
 ---
 
@@ -13,7 +15,7 @@
 
 SaxStat is a versatile, low-cost potentiostat designed for electrochemical testing and research. Built around the ESP32 microcontroller and high-precision ADC/DAC components, it provides professional-grade measurements suitable for cyclic voltammetry and other electrochemical techniques.
 
-**Current Status:** Prototype v03 hardware manufactured and functional. GUI v1.2 software production-ready with 7 experiment types, 4 analysis tools, and comprehensive data management features.
+**Current Status:** Project concluded. Prototype v03 hardware manufactured and functional within -0.2V to +1.5V range. GUI v1.2 software with 7 experiment types, 4 analysis tools, and comprehensive data management features. See [Known Limitation](#known-limitation) for voltage range details.
 
 ## Features
 
@@ -22,7 +24,7 @@ SaxStat is a versatile, low-cost potentiostat designed for electrochemical testi
 - **DAC:** AD5761 (16-bit, voltage output)
 - **ADC:** ADS1115 (16-bit, differential input)
 - **Power Supply:** USB-powered with ICL7660 bipolar supply
-- **Voltage Range:** -1.5V to +1.5V
+- **Voltage Range:** -0.2V to +1.5V (limited by analog switch body diode; see [Known Limitation](#known-limitation))
 - **Current Measurement:** Via transimpedance amplifier (TIA)
 - **Gain Selection:** Two modes via TS5A3160 analog switches (GPIO 33/25)
   - 10⁴ V/A (10kΩ TIA) — ±500 µA range
@@ -182,12 +184,23 @@ The GUI v1.2 is built using PyQt5 with a professional modular architecture:
 - Experiment history with comparison overlays
 - Hardware calibration management
 
-See `WORK_PLAN.md` for detailed development roadmap (v2.6).
-See `software/saxstat_gui_v1/README.md` for v1.2 architecture details.
+See `docs/software/SaxStat_v1_Architecture.md` for v1.2 architecture details.
+
+## Known Limitation
+
+**Negative Voltage Range Restricted (Body Diode Clamping)**
+
+The TS5A3160 analog switches (U5/U6) used for TIA gain selection have internal body diodes that clamp to the GND rail. When the TIA output goes below approximately -0.25V (which happens when VRAMP is negative), these body diodes forward-bias and inject exponentially increasing parasitic current into the measurement — indistinguishable from real electrochemical current.
+
+**Impact:** Usable voltage range is limited to **-0.2V to +1.5V** (originally designed for ±1.5V).
+
+**Root cause:** The TS5A3160 is a single-supply switch (+5V/GND). Replacing it with a bipolar-supply switch (e.g., ADG1419, ±5V) would fix the issue, but requires a PCB redesign.
+
+For the full technical analysis, see [`docs/hardware/Body_Diode_Clamping_Issue.md`](docs/hardware/Body_Diode_Clamping_Issue.md).
 
 ## Development Status
 
-### v1.2 - Production Ready ✅ (Complete)
+### v1.2 — Final Release (Project Concluded)
 
 **Completed:**
 - [x] Hardware prototype v03 design and fabrication
@@ -205,20 +218,12 @@ See `software/saxstat_gui_v1/README.md` for v1.2 architecture details.
 - [x] Configuration management with JSON
 - [x] Experiment history storage
 - [x] Standalone executable (`SaxStat.exe` via PyInstaller)
+- [x] Body diode clamping issue documented and voltage-limited as workaround
 
-### v1.2 - Testing & Workflow 📋 (Planned)
-- [ ] Hardware validation testing (all 7 experiments)
-- [ ] Comprehensive user documentation
-- [ ] Unit test suite (pytest)
-- [ ] Progress indicators for long experiments
-- [ ] Method builder (sequential experiments)
-- [ ] Publication-ready examples
-
-### Future (v2.0+) 🔮
-- [ ] Database integration for experiment history
-- [ ] Remote control API
-- [ ] Method automation and scripting
-- [ ] Mobile app integration
+**Not pursued (project concluded):**
+- Hardware validation testing across all 7 experiments
+- Unit test suite
+- Full negative voltage range (requires PCB redesign with bipolar-supply switches)
 
 ## Documentation
 
@@ -231,14 +236,7 @@ See `software/saxstat_gui_v1/README.md` for v1.2 architecture details.
 
 ## Contributing
 
-Contributions are welcome! This project is in active development. Please:
-
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Submit a pull request
-
-See `CONTRIBUTING.md` (coming soon) for detailed guidelines.
+This project is no longer under active development, but the code is available under the MIT license. Feel free to fork and adapt for your own use.
 
 ## References & Acknowledgments
 
@@ -279,4 +277,4 @@ GitHub repository: https://github.com/xiaojunyang0805/SaxStat
 
 **Disclaimer:** This is a research prototype. Users are responsible for validating measurements for their specific applications.
 
-**Last Updated:** 2026-02-20
+**Last Updated:** 2026-03-23 (Project Concluded)
