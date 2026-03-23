@@ -39,6 +39,10 @@ class DataManager:
             'notes': ''
         }
 
+    def clear(self):
+        """Clear current data for a new experiment."""
+        self._reset()
+
     # Data collection
 
     def start_collection(self, experiment_name: str, parameters: Dict[str, Any]):

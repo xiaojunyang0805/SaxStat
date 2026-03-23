@@ -264,19 +264,35 @@ class MainWindow(QMainWindow):
         right_panel = QWidget()
         right_layout = QHBoxLayout(right_panel)
 
-        # Applied voltage vs time plot (left)
+        # Applied voltage vs time plot (left) with reset button
+        voltage_container = QWidget()
+        voltage_container_layout = QVBoxLayout(voltage_container)
+        voltage_container_layout.setContentsMargins(0, 0, 0, 0)
+        voltage_container_layout.setSpacing(2)
         self.voltage_time_widget = pg.PlotWidget()
         self.voltage_time_widget.setBackground('w')
         self.voltage_time_widget.showGrid(x=True, y=True)
-        # Axis styling will be set by PlotManager after initialization
-        right_layout.addWidget(self.voltage_time_widget)
+        voltage_container_layout.addWidget(self.voltage_time_widget)
+        voltage_reset_btn = QPushButton("Reset View")
+        voltage_reset_btn.setFixedHeight(22)
+        voltage_reset_btn.clicked.connect(lambda: self.voltage_time_widget.getPlotItem().enableAutoRange())
+        voltage_container_layout.addWidget(voltage_reset_btn)
+        right_layout.addWidget(voltage_container)
 
-        # Main data plot (right - current vs voltage or time)
+        # Main data plot (right - current vs voltage or time) with reset button
+        data_container = QWidget()
+        data_container_layout = QVBoxLayout(data_container)
+        data_container_layout.setContentsMargins(0, 0, 0, 0)
+        data_container_layout.setSpacing(2)
         self.plot_widget = pg.PlotWidget()
         self.plot_widget.setBackground('w')
         self.plot_widget.showGrid(x=True, y=True)
-        # Axis styling will be set by PlotManager after initialization
-        right_layout.addWidget(self.plot_widget)
+        data_container_layout.addWidget(self.plot_widget)
+        data_reset_btn = QPushButton("Reset View")
+        data_reset_btn.setFixedHeight(22)
+        data_reset_btn.clicked.connect(lambda: self.plot_widget.getPlotItem().enableAutoRange())
+        data_container_layout.addWidget(data_reset_btn)
+        right_layout.addWidget(data_container)
 
         # Create plot managers
         self.plot_manager = PlotManager(self.plot_widget)
@@ -429,6 +445,89 @@ class MainWindow(QMainWindow):
         if last_port in ports:
             self.port_combo.setCurrentText(last_port)
 
+        # If no ports found, check for driver issues and guide the user
+        if not ports:
+            self._check_driver_status()
+
+    def _check_driver_status(self):
+        """Check for USB-serial driver issues and show guidance if needed."""
+        import sys
+        if sys.platform != 'win32':
+            return
+
+        try:
+            import subprocess
+            result = subprocess.run(
+                ['powershell', '-Command',
+                 "Get-PnpDevice -Class Ports -ErrorAction SilentlyContinue | "
+                 "Select-Object Status, FriendlyName | Format-List"],
+                capture_output=True, text=True, timeout=5,
+                creationflags=subprocess.CREATE_NO_WINDOW
+            )
+            output = result.stdout.strip()
+
+            # Also check for CP210x in error state outside the Ports class
+            result_cp = subprocess.run(
+                ['powershell', '-Command',
+                 "Get-PnpDevice -FriendlyName '*CP210*' -ErrorAction SilentlyContinue | "
+                 "Select-Object Status, FriendlyName | Format-List"],
+                capture_output=True, text=True, timeout=5,
+                creationflags=subprocess.CREATE_NO_WINDOW
+            )
+            output_cp = result_cp.stdout.strip()
+
+            # Determine the appropriate message
+            has_error_ports = False
+            has_cp210x_error = False
+
+            if output:
+                for line in output.split('\n'):
+                    if 'Unknown' in line or 'Error' in line or 'Degraded' in line:
+                        has_error_ports = True
+                        break
+
+            if output_cp:
+                for line in output_cp.split('\n'):
+                    if 'Error' in line or 'Unknown' in line or 'Degraded' in line:
+                        has_cp210x_error = True
+                        break
+
+            if has_cp210x_error:
+                QMessageBox.warning(
+                    self, "Driver Issue Detected",
+                    "<b>CP210x USB-to-UART driver error detected.</b><br><br>"
+                    "The ESP32 uses a CP2102 chip for USB communication, "
+                    "but the driver is not working properly.<br><br>"
+                    "<b>To fix this:</b><br>"
+                    "1. Open <b>Device Manager</b><br>"
+                    "2. Find the CP2102 device (may show a yellow warning icon)<br>"
+                    "3. Right-click → <b>Uninstall device</b><br>"
+                    "4. Unplug the USB cable<br>"
+                    "5. Download and install the latest CP210x driver from "
+                    "<b>Silicon Labs</b><br>"
+                    "6. Plug the device back in<br><br>"
+                    "After reinstalling, click <b>Refresh</b> to detect the port."
+                )
+            elif has_error_ports:
+                QMessageBox.warning(
+                    self, "Serial Port Issue",
+                    "<b>Serial ports were found but have driver errors.</b><br><br>"
+                    "Some USB-serial devices are detected by Windows but their "
+                    "drivers are not working properly.<br><br>"
+                    "Please check <b>Device Manager</b> for devices with "
+                    "yellow warning icons and reinstall their drivers.<br><br>"
+                    "After fixing, click <b>Refresh</b> to detect the port."
+                )
+            else:
+                self.statusbar.showMessage(
+                    "No serial ports found. Please connect the device and click Refresh."
+                )
+
+        except Exception:
+            self.statusbar.showMessage(
+                "No serial ports found. Please connect the device and click Refresh."
+            )
+
     def _on_experiment_changed(self, exp_name: str):
         """Handle experiment selection change."""
         if not exp_name:
@@ -492,7 +591,7 @@ class MainWindow(QMainWindow):
 
         # Sync gain mode with hardware
         command = "MODE_0" if self.current_gain_mode == 0 else "MODE_1"
-        self.serial.send(command)
+        self.serial.send_command(command)
 
     def _on_serial_disconnected(self):
         """Handle serial disconnection."""
@@ -520,7 +619,7 @@ class MainWindow(QMainWindow):
 
         # Send command to hardware if connected
         if self.serial.is_connected():
-            self.serial.send(command)
+            self.serial.send_command(command)
 
         # Update current experiment's TIA resistance
         if self.current_experiment and hasattr(self.current_experiment, 'set_tia_resistance'):
@@ -563,7 +662,7 @@ class MainWindow(QMainWindow):
             command = self.current_experiment.start()
 
             # Send command to hardware
-            self.serial.send(command)
+            self.serial.send_command(command)
 
             # Update UI state
             self.start_btn.setEnabled(False)
@@ -586,7 +685,7 @@ class MainWindow(QMainWindow):
 
                 # Send stop command
                 if command:
-                    self.serial.send(command)
+                    self.serial.send_command(command)
 
                 self._reset_ui_after_experiment()
 

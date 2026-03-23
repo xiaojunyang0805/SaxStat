@@ -93,6 +93,7 @@ class ParameterPanel(QWidget):
             experiment: Experiment instance
         """
         self.experiment = experiment
+        self._has_voltage_limit = False
 
         # Clear existing inputs
         self._clear_inputs()
@@ -120,11 +121,26 @@ class ParameterPanel(QWidget):
 
                 self.param_layout.addRow(label, widget)
 
+        # Show hardware voltage limit note if applicable
+        if self._has_voltage_limit:
+            note = QLabel("Note: Voltage range limited to -0.2 V minimum")
+            note.setStyleSheet("color: #CC7000; font-size: 13px;")
+            note.setWordWrap(True)
+            self.param_layout.addRow(note)
+
         self.configure_btn.setEnabled(True)
         self.save_preset_btn.setEnabled(True)
 
         # Load presets for this experiment
         self._load_presets()
+
+    # Hardware voltage limit due to TS5A3160 body diode clamping
+    VOLTAGE_LIMIT_MIN = -0.2
+    VOLTAGE_LIMIT_TOOLTIP = (
+        "Minimum voltage limited to -0.2 V due to hardware constraint.\n"
+        "The TIA analog switch (TS5A3160) body diode causes measurement\n"
+        "errors at more negative voltages. See docs for details."
+    )
 
     def _create_input_widget(self, param_name: str, param_def: Dict[str, Any]) -> Optional[QWidget]:
         """
@@ -141,6 +157,7 @@ class ParameterPanel(QWidget):
         default = param_def.get('default', 0)
         min_val = param_def.get('min', None)
         max_val = param_def.get('max', None)
+        unit = param_def.get('unit', '')
 
         widget = None
 
@@ -163,6 +180,11 @@ class ParameterPanel(QWidget):
                 widget.setMinimum(min_val)
             if max_val is not None:
                 widget.setMaximum(max_val)
+
+            # Add tooltip for voltage parameters at the hardware limit
+            if unit == 'V' and min_val is not None and min_val == self.VOLTAGE_LIMIT_MIN:
+                widget.setToolTip(self.VOLTAGE_LIMIT_TOOLTIP)
+                self._has_voltage_limit = True
 
         elif param_type == str:
             # Line edit

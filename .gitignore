@@ -218,3 +218,6 @@ site/
 
 # Node modules (if any JavaScript tools are used)
 node_modules/
+
+# PlatformIO build cache
+.pio/

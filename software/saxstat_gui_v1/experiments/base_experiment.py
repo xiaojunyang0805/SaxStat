@@ -142,23 +142,43 @@ class BaseExperiment(QObject, metaclass=QABCMeta):
 
         self._set_state(ExperimentState.IDLE)
 
-    def start(self):
-        """Start experiment execution (template method)."""
+    def start(self) -> Optional[str]:
+        """Start experiment execution (template method).
+
+        Returns:
+            str or None: Command string to send to hardware
+        """
         if self.state != ExperimentState.IDLE:
             raise RuntimeError(f"Cannot start from state {self.state}")
 
         self._set_state(ExperimentState.RUNNING)
         self.data_buffer.clear()
         self.on_started()
+        return self.generate_command(self.parameters)
 
-    def stop(self):
-        """Stop experiment execution (template method)."""
+    def stop(self) -> Optional[str]:
+        """Stop experiment execution (template method).
+
+        Returns:
+            str or None: Stop command string to send to hardware
+        """
         if self.state != ExperimentState.RUNNING:
-            return
+            return None
 
         self._set_state(ExperimentState.STOPPING)
         self.on_stopping()
         self._set_state(ExperimentState.IDLE)
+        return "STOP"
+
+    def receive_data(self, raw_data: str):
+        """Receive raw serial data, process it, and emit if valid.
+
+        Args:
+            raw_data: Raw string from serial port
+        """
+        data_point = self.process_data_point(raw_data)
+        if data_point is not None:
+            self.add_data_point(data_point)
 
     def complete(self):
         """Mark experiment as completed (template method)."""

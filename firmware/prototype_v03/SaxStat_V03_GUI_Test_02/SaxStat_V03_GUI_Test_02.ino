@@ -17,12 +17,19 @@
 
 const uint16_t MIN_DAC_CODE = 15934; // -1.5V
 const uint16_t MAX_DAC_CODE = 49602; // +1.5V
+const uint16_t ZERO_DAC_CODE = 32768; // 0V
 
 SPIClass spi(HSPI);
-Adafruit_ADS1115 ads;  // ADS1115 instance
+Adafruit_ADS1115 ads;
+
+// Global state
+static bool running = false;
+static int currentMode = 0;
+
+// ==================== Hardware helpers ====================
 
 void ad5761_write(uint8_t reg_addr_cmd, uint16_t reg_data) {
-  uint8_t tx_data[3] = {reg_addr_cmd, (reg_data >> 8) & 0xFF, reg_data & 0xFF};
+  uint8_t tx_data[3] = {reg_addr_cmd, (uint8_t)((reg_data >> 8) & 0xFF), (uint8_t)(reg_data & 0xFF)};
   spi.beginTransaction(SPISettings(AD5761_CLOCK_RATE, MSBFIRST, SPI_MODE2));
   digitalWrite(CS_PIN, LOW);
   spi.transfer(tx_data, 3);
@@ -43,83 +50,479 @@ float mapDACToVoltage(uint16_t dacCode) {
   return -1.5 + ((dacCode - MIN_DAC_CODE) / (float)(MAX_DAC_CODE - MIN_DAC_CODE)) * 3.0;
 }
 
-void setup() {
-  Serial.begin(115200);
-  while (!Serial) {
-    delay(10);
+void resetDAC() {
+  ad5761_write(CMD_WR_UPDATE_DAC_REG, ZERO_DAC_CODE);
+}
+
+// Set DAC and read ADC, send DATA line. Returns false if ADC error.
+bool setAndMeasure(float voltage, int* skipCount) {
+  uint16_t dacCode = mapVoltageToDAC(voltage);
+  ad5761_write(CMD_WR_UPDATE_DAC_REG, dacCode);
+  float vramp = mapDACToVoltage(dacCode);
+  int16_t vout_d = ads.readADC_SingleEnded(0);
+  if (vout_d >= 0) {
+    if (*skipCount > 0) {
+      (*skipCount)--;
+    } else {
+      Serial.print("DATA:");
+      Serial.print(vramp, 4);
+      Serial.print(",");
+      Serial.println(vout_d);
+    }
+    return true;
+  }
+  return false;
+}
+
+// Check for STOP or MODE commands during acquisition
+bool checkSerialCommands() {
+  if (Serial.available() > 0) {
+    String command = Serial.readStringUntil('\n');
+    command.trim();
+    if (command == "STOP") {
+      running = false;
+      resetDAC();
+      Serial.println("Stopped.");
+      return true;
+    } else if (command == "MODE_0") {
+      currentMode = 0;
+      digitalWrite(GAIN1_PIN, LOW);
+      digitalWrite(GAIN2_PIN, LOW);
+    } else if (command == "MODE_1") {
+      currentMode = 1;
+      digitalWrite(GAIN1_PIN, HIGH);
+      digitalWrite(GAIN2_PIN, HIGH);
+    }
+  }
+  return false;
+}
+
+// Sweep DAC between two values. Returns false if stopped.
+bool sweepSegment(uint16_t fromDAC, uint16_t toDAC, uint16_t stepSize,
+                  uint32_t delayMs, int* skipCount) {
+  bool goingUp = (toDAC > fromDAC);
+  uint16_t value = fromDAC;
+  unsigned long lastStepTime = 0;
+
+  while (running) {
+    unsigned long now = millis();
+    if (now - lastStepTime >= delayMs) {
+      ad5761_write(CMD_WR_UPDATE_DAC_REG, value);
+      float vramp = mapDACToVoltage(value);
+      int16_t vout_d = ads.readADC_SingleEnded(0);
+      if (vout_d >= 0) {
+        if (*skipCount > 0) { (*skipCount)--; }
+        else {
+          Serial.print("DATA:");
+          Serial.print(vramp, 4);
+          Serial.print(",");
+          Serial.println(vout_d);
+        }
+      }
+      if (goingUp) {
+        if (value >= toDAC) break;
+        value += stepSize;
+        if (value > toDAC) value = toDAC;
+      } else {
+        if (value <= toDAC) break;
+        value = (value - toDAC < stepSize) ? toDAC : value - stepSize;
+      }
+      lastStepTime = now;
+    }
+    if (checkSerialCommands()) return false;
+  }
+  return running;
+}
+
+// ==================== Helper: parse colon-separated floats ====================
+
+// Parse up to maxFields floats from a colon-separated string starting at startIdx.
+// Returns number of fields parsed.
+int parseFields(const String& cmd, int startIdx, float* fields, int maxFields) {
+  int count = 0;
+  int pos = startIdx;
+  while (count < maxFields && pos < (int)cmd.length()) {
+    int next = cmd.indexOf(':', pos);
+    if (next < 0) {
+      fields[count++] = cmd.substring(pos).toFloat();
+      break;
+    } else {
+      fields[count++] = cmd.substring(pos, next).toFloat();
+      pos = next + 1;
+    }
+  }
+  return count;
+}
+
+// ==================== Experiment handlers ====================
+
+// CV: START:<initial_v>:<high_v>:<low_v>:<scan_rate>:<cycles>
+void handleCV(const String& cmd) {
+  float f[5];
+  int n = parseFields(cmd, cmd.indexOf(':') + 1, f, 5);
+  if (n < 5) { Serial.println("Error: CV needs 5 params"); return; }
+
+  float initialV = f[0], highV = f[1], lowV = f[2], scanRate = f[3];
+  int cycles = (int)f[4];
+
+  if (lowV < -1.5 || highV > 1.5 || lowV >= highV ||
+      initialV < lowV || initialV > highV || scanRate <= 0 || cycles < 1) {
+    Serial.println("Error: Parameters out of range!"); resetDAC(); return;
   }
 
-  Serial.println("Starting SaxStat V03 AD5761-ADS1115 Test...");
+  uint16_t initDAC = mapVoltageToDAC(initialV);
+  uint16_t highDAC = mapVoltageToDAC(highV);
+  uint16_t lowDAC  = mapVoltageToDAC(lowV);
+
+  uint16_t dacRange = highDAC - lowDAC;
+  uint16_t stepSize = max((uint16_t)1, (uint16_t)(dacRange / 1000));
+  uint32_t halfCycleTimeMs = (uint32_t)(((highV - lowV) / scanRate) * 1000);
+  uint32_t stepsPerHalf = dacRange / stepSize;
+  uint32_t delayMs = stepsPerHalf > 0 ? halfCycleTimeMs / stepsPerHalf : 1;
+  if (delayMs == 0) delayMs = 1;
+
+  ad5761_write(CMD_WR_UPDATE_DAC_REG, initDAC);
+  delay(200);
+
+  running = true;
+  int skipCount = 50;
+  Serial.println("START_CONFIRMED");
+
+  if (initDAC < highDAC)
+    if (!sweepSegment(initDAC, highDAC, stepSize, delayMs, &skipCount)) goto done;
+
+  for (int c = 0; c < cycles && running; c++) {
+    if (!sweepSegment(highDAC, lowDAC, stepSize, delayMs, &skipCount)) goto done;
+    if (!sweepSegment(lowDAC, highDAC, stepSize, delayMs, &skipCount)) goto done;
+  }
+
+  if (initDAC < highDAC)
+    if (!sweepSegment(highDAC, initDAC, stepSize, delayMs, &skipCount)) goto done;
+
+done:
+  running = false;
+  resetDAC();
+  Serial.println("CV complete.");
+}
+
+// CA: CA:<potential>:<duration>:<sample_interval>
+void handleCA(const String& cmd) {
+  float f[3];
+  int n = parseFields(cmd, cmd.indexOf(':') + 1, f, 3);
+  if (n < 3) { Serial.println("Error: CA needs 3 params"); return; }
+
+  float potential = f[0], duration = f[1], interval = f[2];
+
+  if (potential < -1.5 || potential > 1.5 || duration <= 0 || interval <= 0) {
+    Serial.println("Error: Parameters out of range!"); resetDAC(); return;
+  }
+
+  uint16_t dacCode = mapVoltageToDAC(potential);
+  ad5761_write(CMD_WR_UPDATE_DAC_REG, dacCode);
+  delay(200); // Settle
+
+  running = true;
+  int skipCount = 10;
+  Serial.println("START_CONFIRMED");
+
+  float vramp = mapDACToVoltage(dacCode);
+  uint32_t intervalMs = (uint32_t)(interval * 1000);
+  uint32_t durationMs = (uint32_t)(duration * 1000);
+  unsigned long startTime = millis();
+  unsigned long lastSample = 0;
+
+  while (running && (millis() - startTime < durationMs)) {
+    unsigned long now = millis();
+    if (now - lastSample >= intervalMs) {
+      int16_t vout_d = ads.readADC_SingleEnded(0);
+      if (vout_d >= 0) {
+        if (skipCount > 0) { skipCount--; }
+        else {
+          Serial.print("DATA:");
+          Serial.print(vramp, 4);
+          Serial.print(",");
+          Serial.println(vout_d);
+        }
+      }
+      lastSample = now;
+    }
+    if (checkSerialCommands()) return;
+  }
+
+  running = false;
+  resetDAC();
+  Serial.println("CA complete.");
+}
+
+// LSV: LSV:<start_v>:<end_v>:<scan_rate>
+void handleLSV(const String& cmd) {
+  float f[3];
+  int n = parseFields(cmd, cmd.indexOf(':') + 1, f, 3);
+  if (n < 3) { Serial.println("Error: LSV needs 3 params"); return; }
+
+  float startV = f[0], endV = f[1], scanRate = f[2];
+
+  if (startV < -1.5 || startV > 1.5 || endV < -1.5 || endV > 1.5 ||
+      startV == endV || scanRate <= 0) {
+    Serial.println("Error: Parameters out of range!"); resetDAC(); return;
+  }
+
+  uint16_t startDAC = mapVoltageToDAC(startV);
+  uint16_t endDAC   = mapVoltageToDAC(endV);
+  uint16_t dacRange = (endDAC > startDAC) ? (endDAC - startDAC) : (startDAC - endDAC);
+  uint16_t stepSize = max((uint16_t)1, (uint16_t)(dacRange / 1000));
+  float voltRange = fabs(endV - startV);
+  uint32_t sweepTimeMs = (uint32_t)((voltRange / scanRate) * 1000);
+  uint32_t steps = dacRange / stepSize;
+  uint32_t delayMs = steps > 0 ? sweepTimeMs / steps : 1;
+  if (delayMs == 0) delayMs = 1;
+
+  ad5761_write(CMD_WR_UPDATE_DAC_REG, startDAC);
+  delay(200);
+
+  running = true;
+  int skipCount = 50;
+  Serial.println("START_CONFIRMED");
+
+  sweepSegment(startDAC, endDAC, stepSize, delayMs, &skipCount);
+
+  running = false;
+  resetDAC();
+  Serial.println("LSV complete.");
+}
+
+// DPV: DPV:<start_v>:<end_v>:<step_v>:<pulse_v>:<pulse_period>:<pulse_width>
+void handleDPV(const String& cmd) {
+  float f[6];
+  int n = parseFields(cmd, cmd.indexOf(':') + 1, f, 6);
+  if (n < 6) { Serial.println("Error: DPV needs 6 params"); return; }
+
+  float startV = f[0], endV = f[1], stepV = f[2];
+  float pulseV = f[3], period = f[4], pulseWidth = f[5];
+
+  if (startV < -1.5 || endV > 1.5 || stepV <= 0 || pulseV <= 0 ||
+      period <= 0 || pulseWidth <= 0 || pulseWidth >= period) {
+    Serial.println("Error: Parameters out of range!"); resetDAC(); return;
+  }
+
+  running = true;
+  int skipCount = 10;
+  Serial.println("START_CONFIRMED");
+
+  uint32_t periodMs = (uint32_t)(period * 1000);
+  uint32_t pulseMs  = (uint32_t)(pulseWidth * 1000);
+  bool goingUp = (endV > startV);
+  float baseV = startV;
+
+  while (running) {
+    if ((goingUp && baseV > endV) || (!goingUp && baseV < endV)) break;
+
+    // Baseline measurement (before pulse)
+    setAndMeasure(baseV, &skipCount);
+    delay(periodMs - pulseMs);
+    if (checkSerialCommands()) return;
+
+    // Pulse measurement
+    float pulseVoltage = baseV + pulseV;
+    if (pulseVoltage > 1.5) pulseVoltage = 1.5;
+    if (pulseVoltage < -1.5) pulseVoltage = -1.5;
+    setAndMeasure(pulseVoltage, &skipCount);
+    delay(pulseMs);
+    if (checkSerialCommands()) return;
+
+    // Step to next base potential
+    baseV += goingUp ? stepV : -stepV;
+  }
+
+  running = false;
+  resetDAC();
+  Serial.println("DPV complete.");
+}
+
+// SWV: SWV:<start_v>:<end_v>:<step_v>:<pulse_v>:<frequency>
+void handleSWV(const String& cmd) {
+  float f[5];
+  int n = parseFields(cmd, cmd.indexOf(':') + 1, f, 5);
+  if (n < 5) { Serial.println("Error: SWV needs 5 params"); return; }
+
+  float startV = f[0], endV = f[1], stepV = f[2];
+  float pulseV = f[3], frequency = f[4];
+
+  if (startV < -1.5 || endV > 1.5 || stepV <= 0 || pulseV <= 0 || frequency <= 0) {
+    Serial.println("Error: Parameters out of range!"); resetDAC(); return;
+  }
+
+  running = true;
+  int skipCount = 10;
+  Serial.println("START_CONFIRMED");
+
+  uint32_t halfPeriodMs = (uint32_t)(500.0 / frequency); // half period in ms
+  if (halfPeriodMs == 0) halfPeriodMs = 1;
+  bool goingUp = (endV > startV);
+  float baseV = startV;
+
+  while (running) {
+    if ((goingUp && baseV > endV) || (!goingUp && baseV < endV)) break;
+
+    // Forward pulse (base + pulse)
+    float fwdV = baseV + pulseV;
+    if (fwdV > 1.5) fwdV = 1.5;
+    setAndMeasure(fwdV, &skipCount);
+    delay(halfPeriodMs);
+    if (checkSerialCommands()) return;
+
+    // Reverse pulse (base - pulse)
+    float revV = baseV - pulseV;
+    if (revV < -1.5) revV = -1.5;
+    setAndMeasure(revV, &skipCount);
+    delay(halfPeriodMs);
+    if (checkSerialCommands()) return;
+
+    // Step to next base
+    baseV += goingUp ? stepV : -stepV;
+  }
+
+  running = false;
+  resetDAC();
+  Serial.println("SWV complete.");
+}
+
+// NPV: NPV:<baseline_v>:<start_v>:<end_v>:<step_v>:<pulse_period>:<pulse_width>
+void handleNPV(const String& cmd) {
+  float f[6];
+  int n = parseFields(cmd, cmd.indexOf(':') + 1, f, 6);
+  if (n < 6) { Serial.println("Error: NPV needs 6 params"); return; }
+
+  float baselineV = f[0], startV = f[1], endV = f[2];
+  float stepV = f[3], period = f[4], pulseWidth = f[5];
+
+  if (baselineV < -1.5 || baselineV > 1.5 || startV < -1.5 || endV > 1.5 ||
+      stepV <= 0 || period <= 0 || pulseWidth <= 0 || pulseWidth >= period) {
+    Serial.println("Error: Parameters out of range!"); resetDAC(); return;
+  }
+
+  running = true;
+  int skipCount = 10;
+  Serial.println("START_CONFIRMED");
+
+  uint32_t periodMs = (uint32_t)(period * 1000);
+  uint32_t pulseMs  = (uint32_t)(pulseWidth * 1000);
+  bool goingUp = (endV > startV);
+  float pulseV = startV;
+
+  while (running) {
+    if ((goingUp && pulseV > endV) || (!goingUp && pulseV < endV)) break;
+
+    // Hold at baseline
+    setAndMeasure(baselineV, &skipCount);
+    delay(periodMs - pulseMs);
+    if (checkSerialCommands()) return;
+
+    // Apply pulse
+    setAndMeasure(pulseV, &skipCount);
+    delay(pulseMs);
+    if (checkSerialCommands()) return;
+
+    // Step pulse potential
+    pulseV += goingUp ? stepV : -stepV;
+  }
+
+  running = false;
+  resetDAC();
+  Serial.println("NPV complete.");
+}
+
+// POT: POT:<duration>:<sample_interval>
+void handlePOT(const String& cmd) {
+  float f[2];
+  int n = parseFields(cmd, cmd.indexOf(':') + 1, f, 2);
+  if (n < 2) { Serial.println("Error: POT needs 2 params"); return; }
+
+  float duration = f[0], interval = f[1];
+
+  if (duration <= 0 || interval <= 0) {
+    Serial.println("Error: Parameters out of range!"); return;
+  }
+
+  // No DAC output for open-circuit potentiometry
+  resetDAC();
+
+  running = true;
+  int skipCount = 5;
+  Serial.println("START_CONFIRMED");
+
+  uint32_t intervalMs = (uint32_t)(interval * 1000);
+  uint32_t durationMs = (uint32_t)(duration * 1000);
+  unsigned long startTime = millis();
+  unsigned long lastSample = 0;
+
+  while (running && (millis() - startTime < durationMs)) {
+    unsigned long now = millis();
+    if (now - lastSample >= intervalMs) {
+      int16_t vout_d = ads.readADC_SingleEnded(0);
+      if (vout_d >= 0) {
+        if (skipCount > 0) { skipCount--; }
+        else {
+          Serial.print("DATA:0.0000,");
+          Serial.println(vout_d);
+        }
+      }
+      lastSample = now;
+    }
+    if (checkSerialCommands()) return;
+  }
+
+  running = false;
+  Serial.println("POT complete.");
+}
+
+// ==================== Setup & Main Loop ====================
+
+void setup() {
+  Serial.begin(115200);
+  while (!Serial) { delay(10); }
+
+  Serial.println("Starting SaxStat V03...");
 
   spi.begin(SCK_PIN, -1, MOSI_PIN, CS_PIN);
   pinMode(CS_PIN, OUTPUT);
   digitalWrite(CS_PIN, HIGH);
 
-  // Gain selection pins (TS5A3160): LOW = 10kΩ (10⁴ V/A), HIGH = 1MΩ (10⁶ V/A)
   pinMode(GAIN1_PIN, OUTPUT);
   pinMode(GAIN2_PIN, OUTPUT);
-  digitalWrite(GAIN1_PIN, LOW);  // Default: 10kΩ
+  digitalWrite(GAIN1_PIN, LOW);
   digitalWrite(GAIN2_PIN, LOW);
   ad5761_write(CMD_SW_FULL_RESET, 0x0000);
   delay(10);
   ad5761_write(CMD_WR_CTRL_REG, CONTROL_REG_MINUS3_TO_PLUS3);
   delay(10);
-  ad5761_write(CMD_WR_UPDATE_DAC_REG, 32768); // 0V
+  resetDAC();
   delay(5000);
 
-  // Enhanced ADS1115 initialization
-  Wire.begin(); // Default SDA (21) and SCL (22)
-  Wire.setClock(100000); // Standard 100 kHz
-  Serial.println("Scanning I2C bus...");
+  Wire.begin();
+  Wire.setClock(100000);
   bool adsFound = false;
   for (uint8_t addr : {0x48, 0x49, 0x4A, 0x4B}) {
     Wire.beginTransmission(addr);
-    int error = Wire.endTransmission();
-    if (error == 0) {
-      Serial.print("I2C device found at 0x");
-      Serial.println(addr, HEX);
+    if (Wire.endTransmission() == 0) {
       if (ads.begin(addr)) {
         adsFound = true;
-        Serial.print("ADS1115 initialized at address 0x");
-        Serial.println(addr, HEX);
-        ads.setGain(GAIN_ONE); // ±4.096V range
+        ads.setGain(GAIN_ONE);
+        Serial.print("ADS1115 at 0x"); Serial.println(addr, HEX);
         break;
       }
     }
   }
   if (!adsFound) {
-    Serial.println("Error: ADS1115 not found at any address (0x48-0x4B)!");
-    while (1) {
-      delay(10);
-    }
+    Serial.println("Error: ADS1115 not found!");
+    while (1) { delay(10); }
   }
 
-  // Initial virtual Vramp for verification
-  uint16_t initialDAC = 32768; // 0V
-  float initialVramp = mapDACToVoltage(initialDAC);
-  Serial.print("Initial Virtual Vramp (DAC): ");
-  Serial.print(initialVramp);
-  Serial.println(" V");
+  Serial.println("Ready.");
 }
 
 void loop() {
   static String inputBuffer = "";
-  static bool running = false;
-  static float startVoltage = -1.5;
-  static float endVoltage = 1.5;
-  static float scanRate = 0.1;
-  static int cycles = 1;
-  static uint16_t minValue = MIN_DAC_CODE;
-  static uint16_t maxValue = MAX_DAC_CODE;
-  static uint32_t halfCycleTimeMs = 0;
-  static uint16_t stepSize = 1;
-  static uint32_t delayMs = 1;
-  static int initialSkipCount = 50;
-  static int skippedSamples = 0;
-  static int currentMode = 0; // 0 for ±500 µA (10 kΩ), 1 for ±100 nA (1 MΩ)
-  const float resistorValues[] = {10000.0, 1000000.0}; // 10 kΩ, 1 MΩ in ohms
-  const float maxCurrents[] = {500.0, 0.1}; // ±500 µA, ±100 nA
-  const char* units[] = {"uA", "nA"};
 
   while (Serial.available() > 0) {
     char c = Serial.read();
@@ -127,174 +530,29 @@ void loop() {
       String command = inputBuffer;
       inputBuffer = "";
       command.trim();
-      Serial.print("Received: ");
-      Serial.println(command);
-      if (command.startsWith("START:")) {
-        int index1 = command.indexOf(':') + 1;
-        int index2 = command.indexOf(':', index1);
-        int index3 = command.indexOf(':', index2 + 1);
-        int index4 = command.indexOf(':', index3 + 1);
-        if (index1 > 0 && index2 > 0 && index3 > 0 && index4 > 0) {
-          startVoltage = command.substring(index1, index2).toFloat();
-          endVoltage = command.substring(index2 + 1, index3).toFloat();
-          scanRate = command.substring(index3 + 1, index4).toFloat();
-          cycles = command.substring(index4 + 1).toInt();
-          Serial.print("Parsed: start=");
-          Serial.print(startVoltage);
-          Serial.print(", end=");
-          Serial.print(endVoltage);
-          Serial.print(", rate=");
-          Serial.print(scanRate);
-          Serial.print(", cycles=");
-          Serial.println(cycles);
-          if (startVoltage < -1.5 || endVoltage > 1.5 || scanRate <= 0 || cycles < 1) {
-            Serial.println("Error: Parameters out of range (-1.5V to 1.5V) or invalid!");
-            running = false;
-            ad5761_write(CMD_WR_UPDATE_DAC_REG, 32768); // Reset to 0V
-            return;
-          }
-          running = true;
-          minValue = mapVoltageToDAC(startVoltage);
-          maxValue = mapVoltageToDAC(endVoltage);
-          float voltageRange = abs(endVoltage - startVoltage);
-          halfCycleTimeMs = static_cast<uint32_t>((voltageRange / scanRate) * 1000);
-          stepSize = max(1, (maxValue - minValue) / 1000);
-          uint32_t stepsPerHalf = (maxValue - minValue) / stepSize;
-          delayMs = stepsPerHalf > 0 ? halfCycleTimeMs / stepsPerHalf : 1; // Guard against division by zero
-          if (delayMs == 0) delayMs = 1; // Ensure minimum delay
-          skippedSamples = 0;
-          Serial.println("START_CONFIRMED"); // Immediate confirmation
-          Serial.println("Applied Parameters");
-          Serial.print("minValue (DAC): ");
-          Serial.println(minValue);
-          Serial.print("maxValue (DAC): ");
-          Serial.println(maxValue);
-          Serial.print("Half-cycle time (ms): ");
-          Serial.println(halfCycleTimeMs);
-          Serial.print("Steps per half-cycle: ");
-          Serial.println(stepsPerHalf);
-          Serial.print("Delay per step (ms): ");
-          Serial.println(delayMs);
-        } else {
-          Serial.println("Error: Invalid START command format!");
-        }
-      } else if (command == "STOP") {
-        running = false;
-        ad5761_write(CMD_WR_UPDATE_DAC_REG, 32768); // Reset to 0V
-        Serial.println("CV stopped.");
-      } else if (command == "CALIBRATE") {
-        int16_t vout_d = ads.readADC_SingleEnded(0);
-        if (vout_d >= 0) {
-          Serial.println(vout_d);
-        } else {
-          Serial.println("ADC:ERROR");
-        }
-      } else if (command.startsWith("MODE_")) {
-        if (command == "MODE_0") {
-          currentMode = 0; // ±500 µA (10 kΩ)
-          digitalWrite(GAIN1_PIN, LOW);
-          digitalWrite(GAIN2_PIN, LOW);
-        } else if (command == "MODE_1") {
-          currentMode = 1; // ±100 nA (1 MΩ)
-          digitalWrite(GAIN1_PIN, HIGH);
-          digitalWrite(GAIN2_PIN, HIGH);
-        }
-        Serial.print("Switched to mode: ");
-        Serial.println(currentMode);
-      } else if (command == "RESET_GPIO34:0") {
-        Serial.println("GPIO34 reset command received (ignored, not in use)");
+
+      if (command.startsWith("START:"))     handleCV(command);
+      else if (command.startsWith("CA:"))   handleCA(command);
+      else if (command.startsWith("LSV:"))  handleLSV(command);
+      else if (command.startsWith("DPV:"))  handleDPV(command);
+      else if (command.startsWith("SWV:"))  handleSWV(command);
+      else if (command.startsWith("NPV:"))  handleNPV(command);
+      else if (command.startsWith("POT:"))  handlePOT(command);
+      else if (command == "STOP") {
+        running = false; resetDAC(); Serial.println("Stopped.");
+      }
+      else if (command == "CALIBRATE") {
+        int16_t v = ads.readADC_SingleEnded(0);
+        Serial.println(v >= 0 ? String(v) : "ADC:ERROR");
+      }
+      else if (command == "MODE_0") {
+        currentMode = 0; digitalWrite(GAIN1_PIN, LOW); digitalWrite(GAIN2_PIN, LOW);
+      }
+      else if (command == "MODE_1") {
+        currentMode = 1; digitalWrite(GAIN1_PIN, HIGH); digitalWrite(GAIN2_PIN, HIGH);
       }
     } else {
       inputBuffer += c;
     }
-  }
-
-  if (running) {
-    static uint16_t value = minValue;
-    static bool rising = true;
-    static unsigned long lastStepTime = 0;
-
-    Serial.println("Entering acquisition loop"); // Debug entry
-    for (int cycle = 0; cycle < cycles && running; cycle++) {
-      while (running) {
-        unsigned long currentTime = millis();
-        if (currentTime - lastStepTime >= delayMs) {
-          ad5761_write(CMD_WR_UPDATE_DAC_REG, value);
-          float virtualVramp = mapDACToVoltage(value); // Calculate virtual Vramp
-          Serial.print("Writing DAC value: "); Serial.print(value);
-          Serial.print(", Virtual Vramp: "); Serial.println(virtualVramp, 3); // Debug
-          if (cycle == 0 && rising && value == minValue) {
-            delay(100); // 100 ms settling time
-          }
-          int16_t vout_d = ads.readADC_SingleEnded(0); // Read from ADS1115
-          Serial.print("Read ADS1115 - vout_d: "); Serial.println(vout_d); // Debug ADS1115 read
-          if (vout_d >= 0) {
-            if (cycle == 0 && rising && skippedSamples < initialSkipCount) {
-              skippedSamples++;
-              Serial.println("Skipping transient data");
-            } else {
-              float voltage = (vout_d / 32767.0) * 4.096; // Convert ADC to voltage
-              float current = -voltage / (resistorValues[currentMode] / 1000000.0); // Current in unit
-              if (currentMode == 0 && abs(current) > maxCurrents[0]) current = maxCurrents[0] * (current < 0 ? -1 : 1); // Cap at ±500 µA
-              else if (currentMode == 1 && abs(current) > maxCurrents[1]) current = maxCurrents[1] * (current < 0 ? -1 : 1); // Cap at ±100 nA
-              Serial.print("Current: "); Serial.print(current); Serial.print(" "); Serial.println(units[currentMode]);
-            }
-          } else {
-            Serial.println("ADC:ERROR");
-          }
-          if (rising) {
-            if (value >= maxValue) {
-              value = maxValue;
-              rising = false;
-            } else {
-              value += stepSize;
-            }
-          } else {
-            if (value <= minValue) {
-              value = minValue;
-              rising = true;
-              break;
-            } else {
-              value -= stepSize;
-            }
-          }
-          lastStepTime = currentTime;
-        }
-        if (Serial.available() > 0) {
-          String command = Serial.readStringUntil('\n');
-          command.trim();
-          if (command == "STOP") {
-            running = false;
-            ad5761_write(CMD_WR_UPDATE_DAC_REG, 32768); // Reset to 0V
-            Serial.println("CV stopped.");
-            break;
-          } else if (command == "CALIBRATE") {
-            int16_t vout_d = ads.readADC_SingleEnded(0);
-            if (vout_d >= 0) {
-              Serial.println(vout_d);
-            } else {
-              Serial.println("ADC:ERROR");
-            }
-          } else if (command.startsWith("MODE_")) {
-            if (command == "MODE_0") {
-              currentMode = 0; // ±500 µA (10 kΩ)
-              digitalWrite(GAIN1_PIN, LOW);
-              digitalWrite(GAIN2_PIN, LOW);
-            } else if (command == "MODE_1") {
-              currentMode = 1; // ±100 nA (1 MΩ)
-              digitalWrite(GAIN1_PIN, HIGH);
-              digitalWrite(GAIN2_PIN, HIGH);
-            }
-            Serial.print("Switched to mode: ");
-            Serial.println(currentMode);
-          } else if (command == "RESET_GPIO34:0") {
-            Serial.println("GPIO34 reset command received (ignored, not in use)");
-          }
-        }
-      }
-    }
-    running = false;
-    ad5761_write(CMD_WR_UPDATE_DAC_REG, 32768); // Reset to 0V
-    Serial.println("CV complete.");
   }
 }
